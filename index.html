@@ -2,11 +2,16 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Invitación Juego - Prototipo</title>
 <style>
-  html, body { margin:0; padding:0; background:#1a1a2e; height:100%; overflow:hidden; }
-  #game-container { display:flex; align-items:center; justify-content:center; width:100vw; height:100vh; }
+  html, body { margin:0; padding:0; background:#1a1a2e; overflow:hidden; height:100%; }
+  #game-container {
+    position:fixed; top:0; left:0;
+    width:100vw;
+    height:100vh;
+    height:100dvh; /* en celus modernos, ocupa toda la pantalla de verdad */
+  }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 </head>
@@ -28,11 +33,10 @@ const INVITACION = {
   direccion: "Av. Libertador 1234, CABA",
 };
 
-const ANCHO = 800;
-const ALTO = 400;
 const VELOCIDAD_SCROLL = 220;          // píxeles por segundo
-const OBJETOS_PARA_GANAR = 10;         // en cuanto juntás esta cantidad, se termina el nivel
-const ESPACIADO_MIN = 260;             // distancia mínima entre frutillas (bajá/subí esto para acortar/alargar)
+const OBJETOS_PARA_GANAR = 10;         // con juntar esta cantidad, se termina el nivel
+const OBJETOS_TOTALES = 15;            // hay más de los necesarios: si te perdés alguno, quedan otros para seguir juntando
+const ESPACIADO_MIN = 260;             // distancia mínima entre frutillas
 const ESPACIADO_MAX = 340;             // distancia máxima entre frutillas
 
 // ======================================================
@@ -45,22 +49,30 @@ class EscenaJuego extends Phaser.Scene {
     this.gano = false;
     this.tropezando = false;
 
+    // El tamaño real de la pantalla del dispositivo (celu o compu),
+    // así el juego ocupa toda la pantalla y no un recuadro chiquito.
+    const ANCHO = this.scale.width;
+    const ALTO = this.scale.height;
+    this.ANCHO = ANCHO;
+    this.ALTO = ALTO;
+
     // --- Personaje (por ahora, un rectángulo simple con un ojo) ---
     this.personaje = this.add.container(120, ALTO - 100);
-    const cuerpo = this.add.rectangle(0, 0, 40, 56, 0xff6b6b, 1).setStrokeStyle(2, 0x1a1a2e);
+    this.cuerpo = this.add.rectangle(0, 0, 40, 56, 0xff6b6b, 1).setStrokeStyle(2, 0x1a1a2e);
     const ojo = this.add.circle(10, -10, 4, 0x1a1a2e);
-    this.personaje.add([cuerpo, ojo]);
+    this.personaje.add([this.cuerpo, ojo]);
     this.physics.add.existing(this.personaje);
     this.personaje.body.setSize(40, 56);
     this.personaje.body.setCollideWorldBounds(false);
 
     // --- Objetos coleccionables (frutillas de prueba) ---
-    // El largo del recorrido ya no es un tiempo fijo: se calcula solo, a
-    // partir de dónde cae la última de las OBJETOS_PARA_GANAR frutillas.
+    // Generamos más frutillas de las que hacen falta (15, cuando solo se
+    // necesitan 10): si se pierde alguna, el recorrido sigue dando más
+    // oportunidades, en vez de terminar antes de juntar las 10.
     this.objetos = this.physics.add.staticGroup();
     this.contador = 0;
     let x = 400;
-    for (let i = 0; i < OBJETOS_PARA_GANAR; i++) {
+    for (let i = 0; i < OBJETOS_TOTALES; i++) {
       const y = ALTO - Phaser.Math.Between(90, 160);
       const objeto = this.add.circle(x, y, 12, 0xffd93d).setStrokeStyle(2, 0xc9a200);
       this.physics.add.existing(objeto, true);
@@ -68,7 +80,7 @@ class EscenaJuego extends Phaser.Scene {
       x += Phaser.Math.Between(ESPACIADO_MIN, ESPACIADO_MAX);
     }
     this.physics.add.overlap(this.personaje, this.objetos, this.recolectar, null, this);
-    const DISTANCIA_NIVEL = x + 350; // un poco de pista libre después de la última frutilla
+    const DISTANCIA_NIVEL = x + 800; // bastante pista de sobra después de la última frutilla
     this.distanciaNivel = DISTANCIA_NIVEL;
 
     // --- Piso (ya con el largo del nivel calculado) ---
@@ -85,7 +97,8 @@ class EscenaJuego extends Phaser.Scene {
     }
     this.physics.add.overlap(this.personaje, this.obstaculos, this.tropezar, null, this);
 
-    // --- Meta: red de seguridad por si llegás sin juntar las 10 ---
+    // --- Meta visual al final del todo: es una red de seguridad, no el
+    //     disparador principal (ese es juntar las 10 frutillas) ---
     this.meta = this.add.rectangle(DISTANCIA_NIVEL, ALTO - 120, 50, 160, 0x51cf66, 0.3).setStrokeStyle(3, 0x2f9e44);
     this.add.text(DISTANCIA_NIVEL, ALTO - 220, '🎉', { fontSize: '48px' }).setOrigin(0.5);
     this.physics.add.existing(this.meta, true);
@@ -95,7 +108,7 @@ class EscenaJuego extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, DISTANCIA_NIVEL + ANCHO, ALTO);
     this.physics.world.setBounds(0, 0, DISTANCIA_NIVEL + ANCHO, ALTO);
     this.cameras.main.startFollow(this.personaje, true, 1, 0);
-    this.cameras.main.setFollowOffset(-200, 0);
+    this.cameras.main.setFollowOffset(-ANCHO * 0.25, 0); // deja ver un poco más de lo que viene
 
     // --- Textos fijos en pantalla (no se mueven con la cámara) ---
     this.textoContador = this.add.text(20, 16, '🍓 0 / ' + OBJETOS_PARA_GANAR, { fontSize: '24px', color: '#ffffff' }).setScrollFactor(0);
@@ -130,12 +143,15 @@ class EscenaJuego extends Phaser.Scene {
   }
 
   tropezar() {
-    // No termina la partida: solo un efecto visual breve, para que
-    // se sienta el choque sin frustrar ni detener al invitado.
+    // No termina la partida: el personaje se pone gris un instante,
+    // para que se note el choque sin frustrar ni detener al invitado.
     if (this.tropezando) return;
     this.tropezando = true;
-    this.cameras.main.shake(120, 0.004);
-    this.time.delayedCall(300, () => { this.tropezando = false; });
+    this.cuerpo.setFillStyle(0x999999);
+    this.time.delayedCall(250, () => {
+      this.cuerpo.setFillStyle(0xff6b6b);
+      this.tropezando = false;
+    });
   }
 
   llegarAMeta() {
@@ -153,10 +169,9 @@ class EscenaJuego extends Phaser.Scene {
   update() {
     if (this.gano) return;
     // El personaje avanza solo; el jugador únicamente controla el salto.
+    // (Ya no hay una "pared" invisible al final: si no llega a juntar las
+    // 10, simplemente sigue corriendo en vez de frenarse en seco.)
     this.personaje.body.setVelocityX(VELOCIDAD_SCROLL);
-    if (this.personaje.x > this.distanciaNivel + 40) {
-      this.personaje.x = this.distanciaNivel + 40;
-    }
   }
 }
 
@@ -167,10 +182,13 @@ class EscenaInvitacion extends Phaser.Scene {
   constructor() { super('EscenaInvitacion'); }
 
   create() {
+    const ANCHO = this.scale.width;
+    const ALTO = this.scale.height;
+
     this.add.rectangle(0, 0, ANCHO, ALTO, 0x1a1a2e).setOrigin(0, 0);
-    this.add.text(ANCHO / 2, 50, '¡Festejemos juntos!', { fontSize: '26px', color: '#ffd93d' }).setOrigin(0.5);
-    this.add.text(ANCHO / 2, 110, INVITACION.nombres, { fontSize: '34px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
-    this.add.text(ANCHO / 2, 160, INVITACION.tipoEvento, { fontSize: '16px', color: '#cccccc' }).setOrigin(0.5);
+    this.add.text(ANCHO / 2, ALTO * 0.15, '¡Festejemos juntos!', { fontSize: '26px', color: '#ffd93d' }).setOrigin(0.5);
+    this.add.text(ANCHO / 2, ALTO * 0.15 + 50, INVITACION.nombres, { fontSize: '34px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+    this.add.text(ANCHO / 2, ALTO * 0.15 + 90, INVITACION.tipoEvento, { fontSize: '16px', color: '#cccccc' }).setOrigin(0.5);
 
     const datos = [
       '📅 ' + INVITACION.fecha + ' — ' + INVITACION.hora,
@@ -178,11 +196,11 @@ class EscenaInvitacion extends Phaser.Scene {
       INVITACION.direccion,
     ];
     datos.forEach((linea, i) => {
-      this.add.text(ANCHO / 2, 220 + i * 28, linea, { fontSize: '16px', color: '#ffffff' }).setOrigin(0.5);
+      this.add.text(ANCHO / 2, ALTO * 0.15 + 150 + i * 28, linea, { fontSize: '16px', color: '#ffffff' }).setOrigin(0.5);
     });
 
-    const boton = this.add.rectangle(ANCHO / 2, ALTO - 50, 220, 44, 0xff6b6b).setInteractive();
-    this.add.text(ANCHO / 2, ALTO - 50, 'Jugar de nuevo', { fontSize: '16px', color: '#ffffff' }).setOrigin(0.5);
+    const boton = this.add.rectangle(ANCHO / 2, ALTO - 60, 220, 44, 0xff6b6b).setInteractive();
+    this.add.text(ANCHO / 2, ALTO - 60, 'Jugar de nuevo', { fontSize: '16px', color: '#ffffff' }).setOrigin(0.5);
     boton.on('pointerdown', () => this.scene.start('EscenaJuego'));
   }
 }
@@ -192,12 +210,12 @@ class EscenaInvitacion extends Phaser.Scene {
 // ======================================================
 new Phaser.Game({
   type: Phaser.AUTO,
-  width: ANCHO,
-  height: ALTO,
+  width: window.innerWidth,
+  height: window.innerHeight,
   backgroundColor: '#87ceeb',
   parent: 'game-container',
   scale: {
-    mode: Phaser.Scale.FIT,
+    mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
   physics: {
