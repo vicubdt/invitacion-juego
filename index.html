@@ -520,8 +520,6 @@ const OBJETOS_PARA_GANAR = 10;         // con juntar esta cantidad, se termina e
 const OBJETOS_TOTALES = 15;            // hay más de los necesarios: si te perdés alguno, quedan otros para seguir juntando
 const ESPACIADO_MIN = 260;             // distancia mínima entre frutillas
 const ESPACIADO_MAX = 340;             // distancia máxima entre frutillas
-const ANGULO_MAX_PIERNA = Phaser.Math.DegToRad(35); // cuánto se abre cada pierna al caminar
-const VELOCIDAD_ANIMACION_PIERNAS = 0.012; // qué tan rápido se mueven las piernas (más alto = pasos más rápidos)
 
 // ======================================================
 // ESCENA 1: EL JUEGO
@@ -530,12 +528,14 @@ class EscenaJuego extends Phaser.Scene {
   constructor() { super('EscenaJuego'); }
 
   preload() {
-    // PRUEBA: por ahora el personaje es fijo (el que generamos con IA de
-    // prueba: cabeza + torso + brazos, cortado a la altura de la cadera),
-    // para ver cómo se ve combinado con las piernas animadas por código.
+    // PRUEBA: por ahora el personaje es una imagen fija (la que generamos
+    // con IA de prueba, cuerpo completo y quieto). Es una imagen ESTÁTICA:
+    // no tiene partes animadas, solo se mueve entera (avanza y salta), como
+    // el resto del personaje en cualquier juego simple de este estilo.
     // Más adelante esto va a venir de la invitación de cada cliente (una
-    // imagen distinta por invitación), no de un archivo fijo como este.
-    this.load.image('caraPersonaje', 'personaje-cabeza.png');
+    // imagen distinta por invitación, con el estilo que haya elegido:
+    // doodle, retro o pixel art), no de un archivo fijo como este.
+    this.load.image('personaje', 'personaje-cabeza.png');
   }
 
   create() {
@@ -554,40 +554,26 @@ class EscenaJuego extends Phaser.Scene {
     const CONTROL_ALTO = 110;
     const ALTO_JUEGO = ALTO - CONTROL_ALTO;
 
-    // --- Personaje: "muñeco de papel" ---
-    // El contenedor tiene su punto (0,0) en la CADERA del personaje: desde
-    // ahí para arriba va la imagen generada con IA (cabeza + torso + brazos,
-    // ya recortada justo en la cadera), y desde ahí para abajo van las dos
-    // piernas, que son formas simples dibujadas por código (no por la IA).
-    // Cada pierna gira como un péndulo alrededor de ese punto de la cadera
-    // (ver update(), más abajo), simulando el movimiento al correr.
+    // --- Personaje: una sola imagen fija que se mueve entera ---
+    // Nada de piezas por separado ni animación de piernas: es un solo
+    // dibujo (generado por IA a partir de la foto) que avanza solo y
+    // salta. Más simple, más prolijo, y es justo lo que pidió Vicki.
     this.personaje = this.add.container(120, ALTO_JUEGO - 100);
 
-    const ALTO_TORSO = 56;
-    const ANCHO_TORSO = Math.round(ALTO_TORSO * 0.6); // misma proporción que la imagen generada
-    const COLOR_PIEL = 0xffdaba; // tono aproximado, sacado de la imagen generada
-    const ANCHO_PIERNA = 11;
-    const ALTO_PIERNA = 30;
-    const SEPARACION_PIERNAS = 7;
+    const ALTO_PERSONAJE = 86; // alto del dibujo completo (cabeza a pies)
+    const ANCHO_PERSONAJE = Math.round(ALTO_PERSONAJE * 0.45); // proporción de una persona de pie
 
-    this.piernaIzq = this.add.rectangle(-SEPARACION_PIERNAS, 0, ANCHO_PIERNA, ALTO_PIERNA, COLOR_PIEL)
-      .setStrokeStyle(2, 0x1a1a2e).setOrigin(0.5, 0); // origen arriba = ahí está el "pin" de la cadera
-    this.piernaDer = this.add.rectangle(SEPARACION_PIERNAS, 0, ANCHO_PIERNA, ALTO_PIERNA, COLOR_PIEL)
-      .setStrokeStyle(2, 0x1a1a2e).setOrigin(0.5, 0);
-    this.torso = this.add.image(0, 0, 'caraPersonaje')
-      .setDisplaySize(ANCHO_TORSO, ALTO_TORSO).setOrigin(0.5, 1); // origen abajo = apoya justo en la cadera
+    this.torso = this.add.image(0, 0, 'personaje')
+      .setDisplaySize(ANCHO_PERSONAJE, ALTO_PERSONAJE).setOrigin(0.5, 1); // origen abajo = apoya en el piso
 
-    this.personaje.add([this.piernaIzq, this.piernaDer, this.torso]);
-    this.faseCaminata = 0; // usado en update() para mover las piernas
+    this.personaje.add([this.torso]);
 
     this.physics.add.existing(this.personaje);
-    this.personaje.body.setSize(ANCHO_TORSO, ALTO_TORSO + ALTO_PIERNA);
-    // OJO Vicki: este offset es mi primer cálculo a ojo para que la "caja"
-    // invisible de colisión quede más o menos centrada en el dibujo nuevo.
-    // Puede que al jugar lo veas "flotando" un poco arriba del piso, o un
-    // poco hundido. Si ves eso, contámelo y lo ajusto — es normal que la
-    // primera vez no quede perfecto.
-    this.personaje.body.setOffset(0, -ALTO_PIERNA / 2 + 3);
+    this.personaje.body.setSize(ANCHO_PERSONAJE, ALTO_PERSONAJE);
+    // El origen de la imagen está abajo (apoyado en el piso), así que la
+    // caja de colisión tiene que correrse hacia arriba para cubrir todo
+    // el dibujo, no solo la mitad de abajo.
+    this.personaje.body.setOffset(0, -ALTO_PERSONAJE);
     this.personaje.body.setCollideWorldBounds(false);
 
     // --- Objetos coleccionables (frutillas de prueba) ---
@@ -706,28 +692,12 @@ class EscenaJuego extends Phaser.Scene {
     this.scene.start('EscenaInvitacion');
   }
 
-  update(time, delta) {
+  update() {
     if (this.gano) return;
     // El personaje avanza solo; el jugador únicamente controla el salto.
     // (Ya no hay una "pared" invisible al final: si no llega a juntar las
     // 10, simplemente sigue corriendo en vez de frenarse en seco.)
     this.personaje.body.setVelocityX(VELOCIDAD_SCROLL);
-
-    // --- Piernas animadas ---
-    // Mientras toca el piso: las dos piernas se balancean como un péndulo
-    // (una hacia adelante, la otra hacia atrás, alternando sin parar), como
-    // al caminar o correr. En el aire (saltando): dejan de balancearse y
-    // vuelven suavemente a quedar derechas y juntas.
-    const tocandoPiso = this.personaje.body.blocked.down || this.personaje.body.touching.down;
-    if (tocandoPiso) {
-      this.faseCaminata += delta * VELOCIDAD_ANIMACION_PIERNAS;
-      const angulo = Math.sin(this.faseCaminata) * ANGULO_MAX_PIERNA;
-      this.piernaIzq.rotation = angulo;
-      this.piernaDer.rotation = -angulo;
-    } else {
-      this.piernaIzq.rotation = Phaser.Math.Linear(this.piernaIzq.rotation, 0, 0.25);
-      this.piernaDer.rotation = Phaser.Math.Linear(this.piernaDer.rotation, 0, 0.25);
-    }
   }
 }
 
