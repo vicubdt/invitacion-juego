@@ -527,6 +527,14 @@ const ESPACIADO_MAX = 340;             // distancia máxima entre frutillas
 class EscenaJuego extends Phaser.Scene {
   constructor() { super('EscenaJuego'); }
 
+  preload() {
+    // PRUEBA: por ahora la cara está fija (la que generamos con IA de
+    // prueba), para ver cómo se ve en el personaje. Más adelante esto va
+    // a venir de la invitación de cada cliente (una imagen distinta por
+    // invitación), no de un archivo fijo como este.
+    this.load.image('caraPersonaje', 'test-cara.png');
+  }
+
   create() {
     this.gano = false;
     this.tropezando = false;
@@ -543,11 +551,11 @@ class EscenaJuego extends Phaser.Scene {
     const CONTROL_ALTO = 110;
     const ALTO_JUEGO = ALTO - CONTROL_ALTO;
 
-    // --- Personaje (por ahora, un rectángulo simple con un ojo) ---
+    // --- Personaje: cuerpo simple (por ahora) + cara generada con IA ---
     this.personaje = this.add.container(120, ALTO_JUEGO - 100);
-    this.cuerpo = this.add.rectangle(0, 0, 40, 56, 0xff6b6b, 1).setStrokeStyle(2, 0x1a1a2e);
-    const ojo = this.add.circle(10, -10, 4, 0x1a1a2e);
-    this.personaje.add([this.cuerpo, ojo]);
+    this.cuerpo = this.add.rectangle(0, 18, 36, 30, 0xff6b6b, 1).setStrokeStyle(2, 0x1a1a2e); // el "torso"
+    const cara = this.add.image(0, -14, 'caraPersonaje').setDisplaySize(40, 40); // la cabeza
+    this.personaje.add([this.cuerpo, cara]);
     this.physics.add.existing(this.personaje);
     this.personaje.body.setSize(40, 56);
     this.personaje.body.setCollideWorldBounds(false);
