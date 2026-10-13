@@ -3,15 +3,97 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Invitación Juego - Prototipo</title>
+<meta name="theme-color" content="#f6ce97">
+<title>Una aventura especial · Invitación interactiva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  html, body { margin:0; padding:0; background:#1a1a2e; overflow:hidden; height:100%; }
-  #game-container {
-    position:fixed; top:0; left:0;
-    width:100vw;
-    height:100vh;
-    height:100dvh; /* en celus modernos, ocupa toda la pantalla de verdad */
-  }
+:root { --ink:#543325; --muted:#906a56; --gold:#f7b84f; --coral:#ec8767; --cream:#ffefd3; --paper:#fffaf2; --brown:#7f4c33; }
+* { box-sizing:border-box; }
+html,body { padding:0; margin:0; width:100%; height:100%; overflow:hidden; background:#f8d29d; font-family:'DM Sans',sans-serif; color:var(--ink); }
+button, input, textarea { font:inherit; }
+button { cursor:pointer; }
+button:focus-visible,a:focus-visible { outline:3px solid #458cb1; outline-offset:3px; }
+#game-container { position:fixed; inset:0; height:100dvh; overflow:hidden; touch-action:manipulation; }
+#game-container canvas { display:block; }
+/* PORTADA */
+.start-screen { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; text-align:center; overflow:hidden; background:linear-gradient(180deg,#fce7bf 0%,#f6bb8f 63%,#e59b70 100%); isolation:isolate; }
+.poster-glow { position:absolute; width:min(45vw,330px); aspect-ratio:1; left:60%; top:20%; border-radius:50%; background:radial-gradient(circle,#fff8da 0 34%,#ffe3a9 36% 49%,#ffcf94a8 52%,transparent 72%); filter:blur(1px); z-index:-1; }
+.poster-dune { position:absolute; z-index:-1; width:150%; left:-25%; height:42%; bottom:-13%; border-radius:50% 50% 0 0 / 52% 55% 0 0; background:#d88e69; transform:rotate(-6deg); }
+.poster-dune.two { bottom:-21%; background:#c16c54; transform:rotate(8deg); left:-10%; }
+.poster-dune.three { bottom:-28%; background:#ae604b; transform:rotate(-4deg); }
+.poster-cactus { position:absolute; bottom:12%; left:8%; width:clamp(85px,15vw,180px); opacity:.85; z-index:-1; filter:drop-shadow(9px 18px 5px #914f4440); }
+.poster-cactus.right { left:auto; right:7%; bottom:16%; width:clamp(60px,10vw,130px); opacity:.48; }
+.start-content { z-index:2; width:min(94%,540px); margin:auto 16px; padding:clamp(14px,3.4vh,32px) 20px; }
+.eyebrow { display:inline-block; font-size:12px; font-weight:800; letter-spacing:.22em; text-transform:uppercase; color:#955640; }
+.start-title { margin:14px 0 8px; font:700 clamp(46px,8vw,81px)/.95 'Fredoka',sans-serif; letter-spacing:-.035em; text-shadow:0 3px 0 #ffefce8c; }
+.start-title span { display:block; color:#d37154; }
+.start-subtitle { font-size:clamp(14px,2.5vw,18px); color:#76513e; line-height:1.6; margin:18px auto 24px; max-width:410px; }
+.start-event { display:inline-flex; align-items:center; gap:8px; border:1px solid #fff8eac9; background:#fff6e3b8; color:#80523a; padding:9px 16px; border-radius:100px; font-weight:700; font-size:13px; box-shadow:0 8px 30px #88533d12; }
+.start-button { display:flex; align-items:center; justify-content:center; gap:12px; margin:18px auto 14px; width:min(100%,340px); padding:17px 22px; color:#fff8ed; background:linear-gradient(180deg,#79503a,#543729); border:2px solid #90674d; border-radius:19px; font:700 20px 'Fredoka',sans-serif; box-shadow:0 9px 0 #69402d,0 18px 35px #70402a44; transition:transform .13s,box-shadow .13s; }
+.start-button:active { transform:translateY(5px); box-shadow:0 4px 0 #69402d,0 9px 18px #70402a44; }
+.sound-choice { display:flex; justify-content:center; gap:10px; align-items:center; color:#76513e; font-size:13px; }
+.sound-choice input { accent-color:#916044; width:16px; height:16px; }
+.skip-start { border:0; background:none; color:#764a39; text-decoration:underline; text-underline-offset:4px; margin:21px auto 0; padding:7px; font-size:13px; }
+.poster-caption { position:relative; z-index:1; margin:0 0 max(24px,env(safe-area-inset-bottom)); color:#fff1dd; font-size:12px; letter-spacing:.07em; text-shadow:0 1px 3px #6d3b28; }
+/* HUD DEL JUEGO */
+#game-hud { display:none; position:fixed; z-index:5; inset:0; pointer-events:none; overflow:hidden; }
+.hud-top { display:flex; gap:12px; justify-content:space-between; align-items:flex-start; padding:max(16px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)); }
+.hud-chip { display:inline-flex; align-items:center; gap:9px; border:1px solid #fff8e9b0; border-radius:18px; padding:10px 14px; color:#6c4030; background:#fff8e3d9; box-shadow:0 5px 20px #94573c18; backdrop-filter:blur(12px); font-weight:800; font-size:15px; }
+.hud-chip strong { font:700 20px 'Fredoka',sans-serif; }
+.hud-skip { pointer-events:auto; color:#6a4030; border:1px solid #fff5df99; border-radius:40px; background:#fff6e4c7; padding:12px 16px; font-weight:800; box-shadow:0 6px 24px #a85a3a18; }
+.hud-progress { position:absolute; top:77px; left:50%; transform:translateX(-50%); width:min(48vw,350px); text-align:center; color:#87533e; }
+.hud-progress-label { display:block; font-weight:800; letter-spacing:.18em; font-size:10px; margin-bottom:8px; }
+.progress-track { height:8px; border:1px solid #fff9e6; background:#fff8e6ad; border-radius:30px; box-shadow:0 2px 7px #a6745730; overflow:hidden; }
+#progress-fill { height:100%; width:0; background:linear-gradient(90deg,#d77956,#f2bb64); border-radius:30px; transition:width .15s linear; }
+.jump-wrap { pointer-events:none; position:absolute; bottom:max(16px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:9px; }
+#jump-btn { pointer-events:auto; width:88px; height:88px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#704733; background:radial-gradient(circle at 35% 25%,#fff9e8,#ffe3b9); border:5px solid #fff9e8; border-radius:50%; box-shadow:0 0 0 5px #9d674a48,0 8px 0 #b87959,0 18px 26px #74402c48; touch-action:manipulation; transition:transform .10s; }
+#jump-btn:active, #jump-btn.pressed { transform:translateY(5px) scale(.97); }
+.jump-symbol { font:700 31px/1 'Fredoka',sans-serif; height:34px; }
+.jump-word { font-weight:800; font-size:11px; letter-spacing:.08em; }
+.jump-hint { color:#fff8df; font-weight:800; text-shadow:0 2px 6px #9c5b43; font-size:11px; letter-spacing:.07em; }
+/* INVITACIÓN */
+#invitation-view { display:none; position:fixed; z-index:20; inset:0; overflow-y:auto; overscroll-behavior:contain; background:linear-gradient(#f4c498 0%,#f8e8d2 36%,#fff6e9 70%); padding:0 16px 44px; }
+.invite-hero { margin:0 -16px; text-align:center; padding:52px 20px 80px; background:radial-gradient(circle at 78% 14%,#ffefd3 0 12%,transparent 13%),linear-gradient(165deg,#e4a477,#f7c792 80%); clip-path:ellipse(91% 100% at 50% 0%); }
+.invite-spark { font-size:30px; }
+.invite-hero small { display:block; color:#84523c; text-transform:uppercase; letter-spacing:.22em; font-weight:800; margin-top:13px; }
+.invite-title { font:700 clamp(40px,8vw,65px)/1.1 'Fredoka',sans-serif; color:#653d2f; margin:9px auto 12px; max-width:700px; }
+.invite-kind { font-size:16px; color:#895943; font-weight:700; }
+.invite-card { max-width:650px; margin:-34px auto 0; position:relative; z-index:1; border-radius:30px; background:#fffaf3; border:1px solid #fff; box-shadow:0 18px 50px #8d594025; padding:clamp(20px,4vw,38px); }
+.invite-lead { text-align:center; color:#8e644e; font-size:15px; line-height:1.6; margin:0 0 25px; }
+.detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:22px; }
+.detail-item { background:#f9ecdb; padding:17px; border-radius:17px; min-width:0; }
+.detail-item.wide { grid-column:1/-1; }
+.detail-label { font-size:10px; text-transform:uppercase; letter-spacing:.15em; font-weight:800; color:#9c735a; margin:0 0 8px; }
+.detail-value { font:600 17px 'Fredoka',sans-serif; word-wrap:break-word; }
+.detail-sub { color:#8b6957; font-size:13px; margin:5px 0 0; }
+.invite-actions { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:20px 0; }
+.invite-actions a { display:flex; align-items:center; justify-content:center; padding:12px 5px; text-align:center; font-size:12px; font-weight:800; color:#704b38; text-decoration:none; border-radius:13px; border:1px solid #efd7ba; background:#fff6e7; }
+.invite-actions a:hover { background:#fdeacc; }
+.section-title { font:700 25px 'Fredoka',sans-serif; margin:28px 0 14px; }
+#cuenta-regresiva { text-align:center; font:700 clamp(22px,4vw,27px) 'Fredoka',sans-serif; color:#9d6147; padding:16px; border-radius:17px; background:#fbedd9; }
+.gift-card { padding:18px; border-radius:17px; background:#f9efdf; color:#785440; margin:15px 0; font-size:14px; line-height:1.6; }
+.gift-line { display:flex; gap:8px; align-items:center; margin-top:10px; }
+.gift-line code { flex:1; min-width:0; padding:9px; border-radius:10px; background:#fffbf6; overflow-wrap:anywhere; font-size:12px; }
+.secondary-btn { background:#fffaf3; border:1px solid #dbc4ac; color:#714731; border-radius:11px; padding:9px 12px; font-weight:700; }
+.qr-section { text-align:center; color:#92725d; font-size:12px; margin:26px 0 16px; }
+.qr-section img { display:block; margin:10px auto; border:9px solid white; border-radius:17px; box-shadow:0 5px 18px #9e6f4e20; }
+.qr-section a { color:#ad6948; font-weight:700; }
+.rsvp-section { margin-top:28px; border-top:1px solid #f0dec7; padding-top:2px; }
+.rsvp-section p { line-height:1.55; }
+.rsvp-input { display:block; margin:10px 0; width:100%; padding:14px; border-radius:14px; border:1px solid #e5cbb0; background:#fff; color:#543325; font-size:15px; }
+.rsvp-label { font-size:12px; font-weight:700; color:#85644f; }
+.rsvp-options { display:flex; gap:10px; margin:12px 0; }
+.rsvp-opt { flex:1; padding:13px; border:1px solid #e6c8a9; border-radius:14px; background:#fff7eb; color:#8e664e; font-weight:800; }
+.rsvp-opt.active { color:#593a2a; border:2px solid #ad7852; background:#ffebc8; }
+.submit-btn { background:linear-gradient(180deg,#84583d,#653f2d); color:#fff8ed; font-weight:800; border:0; border-radius:15px; padding:15px; width:100%; margin-top:6px; }
+.submit-btn:disabled { background:#b5a69b; cursor:not-allowed; }
+.rsvp-saved { padding:16px; border-radius:17px; background:#f8e9d3; }
+#volver-jugar { display:none; width:max-content; margin:20px auto 0; padding:12px 18px; background:#fff8ea; border:1px solid #f0d7b9; border-radius:30px; color:#7d5038; font-weight:800; }
+.invite-footer { text-align:center; color:#ae8b71; font-size:12px; padding:25px 0 8px; }
+@media (max-width:580px) { .hud-progress { width:35vw; top:73px; } .hud-progress-label { font-size:9px; } .hud-chip { padding:9px 11px; font-size:12px; } .hud-chip strong { font-size:16px; } .hud-skip { font-size:11px; padding:11px; } .start-title { font-size:clamp(42px,11vw,68px); } .invite-actions { grid-template-columns:1fr 1fr; } .invite-actions a:last-child { grid-column:1/-1; } }
+@media (max-height:600px) { .start-title { font-size:clamp(39px,7vh,63px); } .start-content { margin:auto; padding:10px; } .start-subtitle { margin:8px auto; } .start-button { margin:10px auto 12px; padding:12px; } .skip-start { margin-top:6px; } .poster-caption { display:none; } .hud-progress { top:20px; } .jump-wrap { bottom:13px; } #jump-btn { width:67px; height:67px; } .jump-hint { display:none; } }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -19,15 +101,21 @@
 </head>
 <body>
 <div id="game-container"></div>
-
-<!-- El RSVP se hace con elementos HTML normales (no dibujados en el
-     juego), porque escribir texto a mano anda mucho mejor así: el
-     teclado del celu funciona de forma nativa y es accesible. Esta capa
-     solo se muestra arriba de la pantalla de la invitación. -->
-<div id="volver-jugar" style="display:none; position:fixed; top:10px; right:10px; z-index:11; font-size:13px; color:#cccccc; font-family:sans-serif; cursor:pointer;">↺ Jugar de nuevo</div>
-<div id="rsvp-card" style="display:none; position:fixed; left:0; right:0; bottom:0; max-height:55vh; overflow-y:auto; background:#15132a; border-top:2px solid #ffd93d; padding:16px; padding-bottom:max(16px, env(safe-area-inset-bottom)); box-sizing:border-box; font-family:sans-serif; color:#fff; z-index:10;">
-  <div id="info-extra"></div>
-  <div id="rsvp-form-estado"></div>
+<div id="game-hud" aria-label="Controles del videojuego">
+ <div class="hud-top"><div class="hud-chip" id="hud-count">⭐ <strong>0 / 10</strong></div><button class="hud-skip" id="hud-skip" type="button">Ver invitación ↗</button></div>
+ <div class="hud-progress"><span class="hud-progress-label">EL CAMINO A LA FIESTA</span><div class="progress-track"><div id="progress-fill"></div></div></div>
+ <div class="jump-wrap"><button id="jump-btn" type="button" aria-label="Saltar"><span class="jump-symbol">↑</span><span class="jump-word">SALTAR</span></button><span class="jump-hint">TOCÁ O USÁ ESPACIO</span></div>
+</div>
+<div id="invitation-view">
+  <div class="invite-hero"><div class="invite-spark">✦ ✧ ✦</div><small>¡Lo lograste!</small><h1 class="invite-title" id="invite-names"></h1><div class="invite-kind" id="invite-kind"></div></div>
+  <div class="invite-card">
+    <p class="invite-lead">Un día especial se disfruta más con vos.<br>Acá están todos los detalles para festejar juntos.</p>
+    <div class="detail-grid" id="invite-details"></div>
+    <div id="info-extra"></div>
+    <section class="rsvp-section"><h2 class="section-title">¿Nos acompañás? 💌</h2><div id="rsvp-form-estado"></div></section>
+  </div>
+  <button id="volver-jugar" type="button">↶ Volver a jugar</button>
+  <div class="invite-footer">Hecho para celebrar los momentos que importan ✨</div>
 </div>
 
 <script>
@@ -164,7 +252,8 @@ const EMOJI_FINAL = { 'Casamiento': '💍', 'Cumpleaños': '🎂', 'Quince años
 // ======================================================
 const SUPABASE_URL = 'https://ruxaofwsoihkcytepjiw.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_9NxRoWpnD3RCjF0BuPWfwQ_t-Bx6Zyq';
-const clienteDB = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const clienteDB = window.supabase ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
 
 // ======================================================
 // MÚSICA DE FONDO
@@ -235,39 +324,7 @@ function crearMusicaJuego() {
   };
 }
 
-// Pantalla inicial donde el invitado elige si quiere jugar con sonido.
-// Además de respetar su preferencia, ese toque es lo que habilita el
-// audio en el celular (por la política de "no autoplay" de los navegadores).
-function pedirPreferenciaSonido() {
-  return new Promise((resolve) => {
-    const contenedor = document.getElementById('game-container');
-    contenedor.innerHTML = `
-      <div style="color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:18px;padding:20px;box-sizing:border-box;text-align:center;">
-        <p style="font-size:18px;margin:0;">¿Jugás con sonido?</p>
-        <div style="display:flex;gap:12px;">
-          <button id="sonido-si" style="padding:12px 20px;border-radius:8px;border:none;background:#ffd93d;color:#1a1a2e;font-size:15px;font-weight:bold;">🔊 Con sonido</button>
-          <button id="sonido-no" style="padding:12px 20px;border-radius:8px;border:2px solid #666;background:none;color:#fff;font-size:15px;">🔇 Sin sonido</button>
-        </div>
-      </div>
-    `;
-    document.getElementById('sonido-si').onclick = () => {
-      musicaJuego = crearMusicaJuego();
-      resolve(true);
-    };
-    document.getElementById('sonido-no').onclick = () => resolve(false);
-  });
-}
 
-// ======================================================
-// RSVP (confirmación de asistencia)
-//
-// La respuesta se guarda en dos lugares a la vez:
-// 1) En el celu de quien responde (localStorage), para que si vuelve a
-//    entrar al mismo link, vea su propia respuesta y pueda editarla.
-// 2) En Supabase (la base de datos), para que vos puedas ver TODAS las
-//    respuestas juntas desde el panel de Supabase, sin depender del
-//    celu de cada invitado.
-// ======================================================
 function claveRSVP(id) { return 'rsvp_' + id; }
 
 function obtenerRSVPGuardado(id) {
@@ -275,104 +332,26 @@ function obtenerRSVPGuardado(id) {
   return guardado ? JSON.parse(guardado) : null;
 }
 
-async function guardarRSVP(id, datos) {
-  // Guardamos primero en el celu: esto nunca falla y es lo que le
-  // permite al invitado ver/editar su respuesta aunque no haya señal.
-  localStorage.setItem(claveRSVP(id), JSON.stringify(datos));
-
-  // Después intentamos mandarla a la base de datos central. Si falla
-  // (por ejemplo, sin internet), no rompemos la experiencia del
-  // invitado: el envío va a quedar pendiente para la próxima vez que
-  // use el formulario, y mientras tanto ya ve su respuesta guardada.
-  try {
-    await clienteDB.from('respuestas_rsvp').insert({
-      invitacion_id: id,
-      nombre: datos.nombre,
-      asiste: datos.asiste,
-      cantidad: datos.cantidad,
-      mensaje: datos.mensaje,
+async function guardarRSVP(id,datos){
+  // El invitado nunca ve un falso envío confirmado si la red falló.
+  const key=claveRSVP(id);
+  localStorage.setItem(key,JSON.stringify({...datos,pendiente:true}));
+  try{
+    if(!clienteDB)throw new Error('Supabase no disponible');
+    const {error}=await clienteDB.from('respuestas_rsvp').insert({
+      invitacion_id:id,nombre:datos.nombre,asiste:datos.asiste,
+      cantidad:datos.cantidad,mensaje:datos.mensaje
     });
-  } catch (error) {
-    console.error('No se pudo guardar la respuesta en Supabase:', error);
+    if(error)throw error;
+    localStorage.setItem(key,JSON.stringify({...datos,pendiente:false}));
+    return {ok:true};
+  }catch(error){
+    console.warn('RSVP guardado localmente, falta sincronizar:',error);
+    return {ok:false};
   }
 }
 
-function renderFormularioRSVP() {
-  const cont = document.getElementById('rsvp-form-estado');
-  const previo = obtenerRSVPGuardado(ID_INVITACION);
 
-  if (previo) {
-    cont.innerHTML = `
-      <p style="margin:0 0 8px;font-size:15px;">
-        ${previo.asiste ? '✅ Confirmaste tu asistencia' : '📋 Avisaste que no podés ir'}${previo.asiste ? ' — ' + previo.cantidad + (previo.cantidad === 1 ? ' persona' : ' personas') : ''}
-      </p>
-      <p style="margin:0 0 12px;font-size:13px;color:#cccccc;">${previo.nombre}${previo.mensaje ? ' · "' + previo.mensaje + '"' : ''}</p>
-      <button id="rsvp-editar" style="background:none;border:1px solid #666;color:#ccc;padding:8px 14px;border-radius:8px;font-size:13px;">Editar mi respuesta</button>
-    `;
-    document.getElementById('rsvp-editar').onclick = mostrarFormulario;
-    return;
-  }
-  mostrarFormulario();
-
-  function mostrarFormulario() {
-    cont.innerHTML = `
-      <p style="margin:0 0 10px;font-weight:bold;">¿Vas a venir?</p>
-      <input id="rsvp-nombre" placeholder="Tu nombre" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:none;margin-bottom:8px;font-size:15px;font-family:sans-serif;">
-      <div style="display:flex;gap:8px;margin-bottom:8px;">
-        <button data-asiste="si" class="rsvp-opcion" style="flex:1;padding:10px;border-radius:8px;border:2px solid #51cf66;background:none;color:#fff;font-size:14px;">Sí, voy</button>
-        <button data-asiste="no" class="rsvp-opcion" style="flex:1;padding:10px;border-radius:8px;border:2px solid #ff6b6b;background:none;color:#fff;font-size:14px;">No puedo</button>
-      </div>
-      <div id="rsvp-cantidad-cont" style="display:none;margin-bottom:8px;">
-        <label style="font-size:13px;color:#ccc;">¿Cuántos van (contándote)?</label>
-        <input id="rsvp-cantidad" type="number" min="1" max="10" value="1" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:none;margin-top:4px;font-size:15px;">
-      </div>
-      <textarea id="rsvp-mensaje" placeholder="Mensaje (opcional)" rows="2" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:none;margin-bottom:10px;font-size:14px;font-family:sans-serif;"></textarea>
-      <button id="rsvp-enviar" disabled style="width:100%;padding:12px;border-radius:8px;border:none;background:#666;color:#fff;font-size:15px;font-weight:bold;">Confirmar</button>
-      <p id="rsvp-error" style="color:#ff8787;font-size:13px;margin:6px 0 0;"></p>
-    `;
-
-    let asisteElegido = null;
-    const botones = cont.querySelectorAll('.rsvp-opcion');
-    const nombreInput = document.getElementById('rsvp-nombre');
-    const btnEnviar = document.getElementById('rsvp-enviar');
-
-    function actualizarBotonEnviar() {
-      const ok = nombreInput.value.trim().length > 0 && asisteElegido !== null;
-      btnEnviar.disabled = !ok;
-      btnEnviar.style.background = ok ? '#ffd93d' : '#666';
-      btnEnviar.style.color = ok ? '#1a1a2e' : '#fff';
-    }
-
-    botones.forEach(b => b.onclick = () => {
-      asisteElegido = b.dataset.asiste === 'si';
-      botones.forEach(x => x.style.opacity = '0.4');
-      b.style.opacity = '1';
-      document.getElementById('rsvp-cantidad-cont').style.display = asisteElegido ? 'block' : 'none';
-      actualizarBotonEnviar();
-    });
-    nombreInput.oninput = actualizarBotonEnviar;
-
-    btnEnviar.onclick = async () => {
-      const nombre = nombreInput.value.trim();
-      if (!nombre || asisteElegido === null) {
-        document.getElementById('rsvp-error').textContent = 'Completá tu nombre y si vas a venir.';
-        return;
-      }
-      const cantidadInput = parseInt(document.getElementById('rsvp-cantidad').value, 10) || 1;
-      const cantidad = asisteElegido ? Math.max(1, Math.min(10, cantidadInput)) : 0;
-      const mensaje = document.getElementById('rsvp-mensaje').value.trim();
-      btnEnviar.disabled = true;
-      btnEnviar.textContent = 'Enviando...';
-      await guardarRSVP(ID_INVITACION, { nombre, asiste: asisteElegido, cantidad, mensaje, fecha: new Date().toISOString() });
-      renderFormularioRSVP();
-    };
-  }
-}
-
-// ======================================================
-// INFORMACIÓN EXTRA DE LA INVITACIÓN (cuenta regresiva, cómo llegar,
-// agendar, compartir, dress code, regalo/transferencia y el QR)
-// ======================================================
 let intervaloCuentaRegresiva = null;
 
 function linkMaps(direccion) {
@@ -423,379 +402,406 @@ async function generarQRDataURL(texto) {
   }
 }
 
-async function construirTarjetaInvitacion() {
-  const cont = document.getElementById('info-extra');
-  const urlInvitacion = window.location.origin + window.location.pathname + '?id=' + ID_INVITACION;
 
-  let html = '';
+/* =============================================================
+   NUEVO DISEÑO · DESIERTO ILUSTRADO
+   Paisaje, personaje, cactus, botones y pantallas rediseñadas.
+   Los datos del evento, Supabase y el RSVP siguen siendo reutilizables.
+   ============================================================= */
+const VELOCIDAD_SCROLL = 275;
+const OBJETOS_PARA_GANAR = 10;
+const DISTANCIA_NIVEL = 13500; // ~49 segundos de recorrido
+let instanciaJuego = null;
 
-  if (INVITACION.fechaHoraIso) {
-    html += '<p id="cuenta-regresiva" style="text-align:center;font-size:20px;font-weight:bold;color:#ffd93d;margin:0 0 14px;"></p>';
-  }
+const $ = (id) => document.getElementById(id);
+const escaparHTML = (valor) => String(valor ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-  const mlink = linkMaps(INVITACION.direccion);
-  const clink = linkCalendario(INVITACION);
-  html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">';
-  html += '<a href="' + mlink + '" target="_blank" rel="noopener" style="flex:1;min-width:110px;text-align:center;padding:10px;border-radius:8px;border:1px solid #666;color:#fff;text-decoration:none;font-size:13px;">📍 Cómo llegar</a>';
-  if (clink) {
-    html += '<a href="' + clink + '" target="_blank" rel="noopener" style="flex:1;min-width:110px;text-align:center;padding:10px;border-radius:8px;border:1px solid #666;color:#fff;text-decoration:none;font-size:13px;">📅 Agendar</a>';
-  }
-  const mensajeWsp = encodeURIComponent('¡Te invito a mi evento! Mirá la invitación: ' + urlInvitacion);
-  html += '<a href="https://wa.me/?text=' + mensajeWsp + '" target="_blank" rel="noopener" style="flex:1;min-width:110px;text-align:center;padding:10px;border-radius:8px;border:1px solid #51cf66;color:#51cf66;text-decoration:none;font-size:13px;">💬 Compartir</a>';
-  html += '</div>';
-
-  if (INVITACION.dressCode) {
-    html += '<p style="margin:0 0 10px;font-size:13px;"><strong>Dress code:</strong> ' + INVITACION.dressCode + '</p>';
-  }
-
-  if (INVITACION.regaloTexto || INVITACION.regaloDatos) {
-    html += '<div style="margin:0 0 14px;padding:10px;background:#1f1c38;border-radius:8px;">';
-    if (INVITACION.regaloTexto) html += '<p style="margin:0 0 8px;font-size:13px;">' + INVITACION.regaloTexto + '</p>';
-    if (INVITACION.regaloDatos) {
-      html += '<div style="display:flex;align-items:center;gap:8px;">'
-        + '<code id="regalo-datos-texto" style="flex:1;font-size:13px;background:#12101c;padding:6px 8px;border-radius:6px;word-break:break-all;">' + INVITACION.regaloDatos + '</code>'
-        + '<button id="regalo-copiar" style="padding:6px 10px;border-radius:6px;border:1px solid #666;background:none;color:#fff;font-size:12px;white-space:nowrap;">Copiar</button>'
-        + '</div>';
-    }
-    html += '</div>';
-  }
-
-  html += '<div style="text-align:center;margin-bottom:14px;">'
-    + '<p style="font-size:12px;color:#ccc;margin:0 0 8px;">Código QR de esta invitación</p>'
-    + '<div id="qr-contenedor"></div>'
-    + '<a id="qr-descargar" download="invitacion-' + ID_INVITACION + '.png" style="display:none;font-size:12px;color:#ffd93d;">Descargar QR</a>'
-    + '</div>';
-
-  html += '<hr style="border:none;border-top:1px solid #333;margin:0 0 14px;">';
-
-  cont.innerHTML = html;
-
-  const btnCopiar = document.getElementById('regalo-copiar');
-  if (btnCopiar) {
-    btnCopiar.onclick = async () => {
-      try {
-        await navigator.clipboard.writeText(INVITACION.regaloDatos);
-        btnCopiar.textContent = '¡Copiado!';
-        setTimeout(() => { btnCopiar.textContent = 'Copiar'; }, 1500);
-      } catch (error) {
-        console.error('No se pudo copiar:', error);
-      }
-    };
-  }
-
-  if (INVITACION.fechaHoraIso) {
-    actualizarCuentaRegresiva();
-    intervaloCuentaRegresiva = setInterval(actualizarCuentaRegresiva, 1000);
-  }
-
-  const qrDataUrl = await generarQRDataURL(urlInvitacion);
-  if (qrDataUrl) {
-    document.getElementById('qr-contenedor').innerHTML = '<img src="' + qrDataUrl + '" alt="Código QR" style="width:160px;height:160px;border-radius:8px;">';
-    const enlaceQR = document.getElementById('qr-descargar');
-    enlaceQR.href = qrDataUrl;
-    enlaceQR.style.display = 'inline-block';
-  }
-}
-
-async function mostrarUIInvitacion() {
-  document.getElementById('rsvp-card').style.display = 'block';
-  // El link para "jugar de nuevo" solo tiene sentido si esta invitación
-  // incluye el juego — en la que es solo tarjeta, no hay nada a lo que volver.
-  document.getElementById('volver-jugar').style.display = INVITACION.incluyeJuego ? 'block' : 'none';
-  await construirTarjetaInvitacion();
-  renderFormularioRSVP();
-}
-
-function ocultarUIInvitacion() {
-  document.getElementById('rsvp-card').style.display = 'none';
-  document.getElementById('volver-jugar').style.display = 'none';
-  if (intervaloCuentaRegresiva) {
-    clearInterval(intervaloCuentaRegresiva);
-    intervaloCuentaRegresiva = null;
-  }
-}
-
-const VELOCIDAD_SCROLL = 220;          // píxeles por segundo
-const OBJETOS_PARA_GANAR = 10;         // con juntar esta cantidad, se termina el nivel
-const OBJETOS_TOTALES = 15;            // hay más de los necesarios: si te perdés alguno, quedan otros para seguir juntando
-const ESPACIADO_MIN = 260;             // distancia mínima entre frutillas
-const ESPACIADO_MAX = 340;             // distancia máxima entre frutillas
-
-// ======================================================
-// ESCENA 1: EL JUEGO
-// ======================================================
-class EscenaJuego extends Phaser.Scene {
-  constructor() { super('EscenaJuego'); }
-
-  preload() {
-    // PRUEBA: por ahora el personaje es una imagen fija (la que generamos
-    // con IA de prueba, cuerpo completo y quieto). Es una imagen ESTÁTICA:
-    // no tiene partes animadas, solo se mueve entera (avanza y salta), como
-    // el resto del personaje en cualquier juego simple de este estilo.
-    // Más adelante esto va a venir de la invitación de cada cliente (una
-    // imagen distinta por invitación, con el estilo que haya elegido:
-    // doodle, retro o pixel art), no de un archivo fijo como este.
-    this.load.image('personaje', 'personaje-cabeza.png');
-  }
-
-  create() {
-    this.gano = false;
-    this.tropezando = false;
-
-    // El tamaño real de la pantalla del dispositivo (celu o compu),
-    // así el juego ocupa toda la pantalla y no un recuadro chiquito.
-    const ANCHO = this.scale.width;
-    const ALTO = this.scale.height;
-    this.ANCHO = ANCHO;
-
-    // Reservamos una franja abajo solo para los controles, separada del
-    // área donde pasan los obstáculos y las frutillas (para que el botón
-    // de saltar no quede "pisando" el juego, como pasaba antes).
-    const CONTROL_ALTO = 110;
-    const ALTO_JUEGO = ALTO - CONTROL_ALTO;
-
-    // --- Personaje: una sola imagen fija que se mueve entera ---
-    // Nada de piezas por separado ni animación de piernas: es un solo
-    // dibujo (generado por IA a partir de la foto) que avanza solo y
-    // salta. Más simple, más prolijo, y es justo lo que pidió Vicki.
-    this.personaje = this.add.container(120, ALTO_JUEGO - 100);
-
-    // IMPORTANTE: antes esto tenía un ancho "inventado" (fijo), que
-    // deformaba al personaje si la imagen real no tenía exactamente esa
-    // proporción (se veía aplastado o estirado). Ahora en vez de inventar
-    // el ancho, lo calculamos a partir del tamaño REAL de la imagen que
-    // llegó, así el personaje respeta siempre su proporción original, sea
-    // cual sea — nunca se deforma.
-    const ALTO_PERSONAJE = 86; // alto con el que se muestra en el juego
-    const imagenOriginal = this.textures.get('personaje').getSourceImage();
-    const PROPORCION_REAL = imagenOriginal.width / imagenOriginal.height;
-    const ANCHO_PERSONAJE = Math.round(ALTO_PERSONAJE * PROPORCION_REAL);
-
-    this.torso = this.add.image(0, 0, 'personaje')
-      .setDisplaySize(ANCHO_PERSONAJE, ALTO_PERSONAJE).setOrigin(0.5, 1); // origen abajo = apoya en el piso
-
-    this.personaje.add([this.torso]);
-
-    this.physics.add.existing(this.personaje);
-    this.personaje.body.setSize(ANCHO_PERSONAJE, ALTO_PERSONAJE);
-    // El origen de la imagen está abajo (apoyado en el piso), así que la
-    // caja de colisión tiene que correrse hacia arriba para cubrir todo
-    // el dibujo, no solo la mitad de abajo.
-    this.personaje.body.setOffset(0, -ALTO_PERSONAJE);
-    this.personaje.body.setCollideWorldBounds(false);
-
-    // --- Objetos coleccionables (frutillas de prueba) ---
-    // Generamos más frutillas de las que hacen falta (15, cuando solo se
-    // necesitan 10): si se pierde alguna, el recorrido sigue dando más
-    // oportunidades, en vez de terminar antes de juntar las 10.
-    this.objetos = this.physics.add.staticGroup();
-    this.contador = 0;
-    let x = 400;
-    for (let i = 0; i < OBJETOS_TOTALES; i++) {
-      const y = ALTO_JUEGO - Phaser.Math.Between(90, 160);
-      const objeto = this.add.circle(x, y, 12, COLOR_OBJETO).setStrokeStyle(2, 0xc9a200);
-      this.physics.add.existing(objeto, true);
-      this.objetos.add(objeto);
-      x += Phaser.Math.Between(ESPACIADO_MIN, ESPACIADO_MAX);
-    }
-    this.physics.add.overlap(this.personaje, this.objetos, this.recolectar, null, this);
-    const DISTANCIA_NIVEL = x + 800; // bastante pista de sobra después de la última frutilla
-    this.distanciaNivel = DISTANCIA_NIVEL;
-
-    // --- Piso (ya con el largo del nivel calculado) ---
-    this.piso = this.add.rectangle(0, ALTO_JUEGO - 40, DISTANCIA_NIVEL + ANCHO * 2, 20, 0x4a3f6b).setOrigin(0, 0);
-    this.physics.add.existing(this.piso, true); // true = estático
-    this.physics.add.collider(this.personaje, this.piso);
-
-    // --- Obstáculos: NO terminan la partida, solo hacen tropezar ---
-    this.obstaculos = this.physics.add.staticGroup();
-    for (let ox = 600; ox < DISTANCIA_NIVEL - 250; ox += Phaser.Math.Between(300, 420)) {
-      const obstaculo = this.add.rectangle(ox, ALTO_JUEGO - 64, 30, 48, 0x6c5ce7).setStrokeStyle(2, 0x1a1a2e);
-      this.physics.add.existing(obstaculo, true);
-      this.obstaculos.add(obstaculo);
-    }
-    this.physics.add.overlap(this.personaje, this.obstaculos, this.tropezar, null, this);
-
-    // --- Meta visual al final del todo: es una red de seguridad, no el
-    //     disparador principal (ese es juntar las 10 frutillas) ---
-    this.meta = this.add.rectangle(DISTANCIA_NIVEL, ALTO_JUEGO - 120, 50, 160, 0x51cf66, 0.3).setStrokeStyle(3, 0x2f9e44);
-    this.add.text(DISTANCIA_NIVEL, ALTO_JUEGO - 220, SIMBOLO_FINAL, { fontSize: '48px' }).setOrigin(0.5);
-    this.physics.add.existing(this.meta, true);
-    this.physics.add.overlap(this.personaje, this.meta, this.llegarAMeta, null, this);
-
-    // --- Cámara que sigue al personaje ---
-    this.cameras.main.setBounds(0, 0, DISTANCIA_NIVEL + ANCHO, ALTO);
-    this.physics.world.setBounds(0, 0, DISTANCIA_NIVEL + ANCHO, ALTO);
-    this.cameras.main.startFollow(this.personaje, true, 1, 0);
-    this.cameras.main.setFollowOffset(-ANCHO * 0.25, 0); // deja ver un poco más de lo que viene
-
-    // --- Textos fijos en pantalla (no se mueven con la cámara) ---
-    this.textoContador = this.add.text(20, 16, EMOJI_OBJETO + ' 0 / ' + OBJETOS_PARA_GANAR, { fontSize: '24px', color: '#ffffff' }).setScrollFactor(0);
-
-    // --- Franja de controles, separada del área donde pasa el juego ---
-    this.add.rectangle(0, ALTO_JUEGO, ANCHO, CONTROL_ALTO, 0x12101c, 0.9).setOrigin(0, 0).setScrollFactor(0);
-    const boton = this.add.circle(ANCHO - 80, ALTO_JUEGO + CONTROL_ALTO / 2, 42, 0xffffff, 0.25).setScrollFactor(0).setStrokeStyle(3, 0xffffff).setInteractive();
-    this.add.text(ANCHO - 80, ALTO_JUEGO + CONTROL_ALTO / 2, 'SALTAR', { fontSize: '14px', color: '#ffffff' }).setOrigin(0.5).setScrollFactor(0);
-    boton.on('pointerdown', () => this.saltar());
-    this.input.keyboard.on('keydown-SPACE', () => this.saltar());
-
-    // --- Acceso directo a la invitación, sin jugar (accesibilidad) ---
-    this.add.text(ANCHO - 10, 10, 'Ver invitación sin jugar →', { fontSize: '13px', color: '#cccccc' })
-      .setOrigin(1, 0).setScrollFactor(0).setInteractive()
-      .on('pointerdown', () => this.irALaInvitacion());
-
-    // --- Música de fondo, solo si el invitado eligió jugar con sonido ---
-    if (SONIDO_ACTIVADO && musicaJuego) {
-      musicaJuego.iniciar();
-    }
-  }
-
-  saltar() {
-    if (this.gano) return;
-    const tocandoPiso = this.personaje.body.blocked.down || this.personaje.body.touching.down;
-    if (tocandoPiso) {
-      this.personaje.body.setVelocityY(-520);
-    }
-  }
-
-  recolectar(personaje, objeto) {
-    objeto.destroy();
-    this.contador++;
-    this.textoContador.setText(EMOJI_OBJETO + ' ' + this.contador + ' / ' + OBJETOS_PARA_GANAR);
-    if (this.contador >= OBJETOS_PARA_GANAR) {
-      this.llegarAMeta(); // justo lo que pediste: con las 10, ya se llega a la meta
-    }
-  }
-
-  tropezar() {
-    // No termina la partida: el personaje se pone gris un instante,
-    // para que se note el choque sin frustrar ni detener al invitado.
-    if (this.tropezando) return;
-    this.tropezando = true;
-    this.torso.setTint(0x999999);
-    this.time.delayedCall(250, () => {
-      this.torso.clearTint();
-      this.tropezando = false;
-    });
-  }
-
-  llegarAMeta() {
-    if (this.gano) return;
-    this.gano = true;
-    this.personaje.body.setVelocity(0, 0);
-    this.cameras.main.flash(400, 255, 255, 255);
-
-    // El festejo se muestra siempre en el centro de la pantalla, sin
-    // importar si ganaste juntando las 10 o llegando físicamente al
-    // cartel del final (así nunca te lo perdés).
-    const simbolo = this.add.text(this.scale.width / 2, this.scale.height / 2, SIMBOLO_FINAL, { fontSize: '72px' })
-      .setOrigin(0.5).setScrollFactor(0).setScale(0.3);
-    this.tweens.add({ targets: simbolo, scale: 1.2, duration: 400, ease: 'Back.Out' });
-
-    this.time.delayedCall(700, () => this.irALaInvitacion());
-  }
-
-  irALaInvitacion() {
-    if (musicaJuego) musicaJuego.detener();
-    this.scene.start('EscenaInvitacion');
-  }
-
-  update() {
-    if (this.gano) return;
-    // El personaje avanza solo; el jugador únicamente controla el salto.
-    // (Ya no hay una "pared" invisible al final: si no llega a juntar las
-    // 10, simplemente sigue corriendo en vez de frenarse en seco.)
-    this.personaje.body.setVelocityX(VELOCIDAD_SCROLL);
-  }
-}
-
-// ======================================================
-// ESCENA 2: LA INVITACIÓN
-// ======================================================
-class EscenaInvitacion extends Phaser.Scene {
-  constructor() { super('EscenaInvitacion'); }
-
-  create() {
-    const ANCHO = this.scale.width;
-    const ALTO = this.scale.height;
-
-    // Los datos del evento ocupan solo la parte de arriba de la pantalla;
-    // la parte de abajo queda libre para la tarjeta de RSVP (HTML), que
-    // se muestra por encima de esto.
-    this.add.rectangle(0, 0, ANCHO, ALTO, 0x1a1a2e).setOrigin(0, 0);
-    this.add.text(ANCHO / 2, ALTO * 0.08, '¡Festejemos juntos!', { fontSize: '22px', color: '#ffd93d' }).setOrigin(0.5);
-    this.add.text(ANCHO / 2, ALTO * 0.08 + 38, INVITACION.nombres, { fontSize: '28px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
-    this.add.text(ANCHO / 2, ALTO * 0.08 + 72, INVITACION.tipoEvento, { fontSize: '14px', color: '#cccccc' }).setOrigin(0.5);
-
-    const datos = [
-      '📅 ' + INVITACION.fecha + ' — ' + INVITACION.hora,
-      '📍 ' + INVITACION.lugar,
-      INVITACION.direccion,
-    ];
-    datos.forEach((linea, i) => {
-      this.add.text(ANCHO / 2, ALTO * 0.08 + 112 + i * 22, linea, { fontSize: '13px', color: '#ffffff' }).setOrigin(0.5);
-    });
-
-    // Mostramos la tarjeta de RSVP (HTML) y, si esta invitación incluye
-    // juego, conectamos el link para volver a jugar.
-    mostrarUIInvitacion();
-    if (INVITACION.incluyeJuego) {
-      document.getElementById('volver-jugar').onclick = () => {
-        ocultarUIInvitacion();
-        this.scene.start('EscenaJuego');
-      };
-    }
-  }
-}
-
-// ======================================================
-// ARRANQUE: primero cargamos los datos de la invitación (ahora vienen de
-// Supabase), y solo cuando ya los tenemos, arrancamos el motor del juego.
-// Como esto implica esperar una respuesta de internet, mostramos un
-// "Cargando..." breve mientras tanto en vez de una pantalla en blanco.
-// ======================================================
-async function iniciar() {
-  const contenedor = document.getElementById('game-container');
-  contenedor.innerHTML = '<div style="color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100%;font-size:16px;">Cargando...</div>';
-
-  ID_INVITACION = obtenerIdDeLaUrl();
-  INVITACION = await cargarInvitacion(ID_INVITACION);
-  EMOJI_OBJETO = EMOJI_OBJETOS[INVITACION.objeto] || '🍓';
-  COLOR_OBJETO = COLOR_OBJETOS[INVITACION.objeto] || 0xffd93d;
-  SIMBOLO_FINAL = EMOJI_FINAL[INVITACION.tipoEvento] || '🎉';
-
-  // La música solo existe durante el juego, así que si esta invitación no
-  // lo incluye, ni siquiera preguntamos por el sonido — se va directo a
-  // la tarjeta, con menos pasos de por medio para el invitado.
-  if (INVITACION.incluyeJuego) {
-    SONIDO_ACTIVADO = await pedirPreferenciaSonido();
-  }
-
-  contenedor.innerHTML = '';
-
-  // Si no incluye juego, directamente no registramos esa escena: no hay
-  // forma de llegar a ella ni por accidente.
-  const escenas = INVITACION.incluyeJuego ? [EscenaJuego, EscenaInvitacion] : [EscenaInvitacion];
-
-  new Phaser.Game({
-    type: Phaser.AUTO,
-    width: window.innerWidth,
-    height: window.innerHeight,
-    backgroundColor: '#87ceeb',
-    parent: 'game-container',
-    scale: {
-      mode: Phaser.Scale.RESIZE,
-      autoCenter: Phaser.Scale.CENTER_BOTH,
-    },
-    physics: {
-      default: 'arcade',
-      arcade: { gravity: { y: 1200 }, debug: false },
-    },
-    scene: escenas,
+function animarInicio() {
+  return new Promise(resolve => {
+    const contenedor = $('game-container');
+    contenedor.innerHTML = `
+      <div class="start-screen">
+        <div class="poster-glow"></div>
+        <div class="poster-dune"></div><div class="poster-dune two"></div><div class="poster-dune three"></div>
+        <svg class="poster-cactus" viewBox="0 0 140 190" aria-hidden="true"><path d="M70 183V45M70 98H48Q28 98 28 76V59M70 129h23q25 0 25-23V83" stroke="#377262" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M62 178V47M50 89Q38 85 37 64M85 120q22-4 24-31" stroke="#64a17c" stroke-width="8" stroke-linecap="round" fill="none"/></svg>
+        <svg class="poster-cactus right" viewBox="0 0 140 190" aria-hidden="true"><path d="M70 183V45M70 98H48Q28 98 28 76V59M70 129h23q25 0 25-23V83" stroke="#47735c" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M62 178V47M50 89Q38 85 37 64M85 120q22-4 24-31" stroke="#76a47b" stroke-width="8" stroke-linecap="round" fill="none"/></svg>
+        <main class="start-content">
+          <span class="start-event">✦ ${escaparHTML(INVITACION.tipoEvento)} de ${escaparHTML(INVITACION.nombres)} ✦</span>
+          <div class="eyebrow" style="margin-top:24px">UNA INVITACIÓN DIFERENTE</div>
+          <h1 class="start-title">La aventura <span>comienza acá.</span></h1>
+          <p class="start-subtitle">Atravesá el desierto, saltá los cactus y juntá tesoros. Al final del camino te espera una sorpresa especial.</p>
+          <button class="start-button" id="comenzar-juego" type="button">¡Empezar aventura! <span aria-hidden="true">➜</span></button>
+          <label class="sound-choice"><input type="checkbox" id="pref-sonido" checked> Jugar con música</label>
+          <button class="skip-start" id="omitir-juego" type="button">Prefiero ver la invitación directamente ↗</button>
+        </main>
+        <p class="poster-caption">UN CAMINO CORTITO A UN GRAN FESTEJO · 50 SEGUNDOS</p>
+      </div>`;
+    $('comenzar-juego').addEventListener('click', () => {
+      const audio = $('pref-sonido').checked;
+      if (audio) { try { musicaJuego = crearMusicaJuego(); } catch(e) { console.warn('Audio no disponible:',e); } }
+      SONIDO_ACTIVADO = audio && !!musicaJuego;
+      resolve(true);
+    }, {once:true});
+    $('omitir-juego').addEventListener('click', () => resolve(false), {once:true});
   });
 }
 
-iniciar();
+/* Texturas dibujadas con canvas: no requieren bajar sprites de internet. */
+function crearTextura(scene, key, width, height, dibujar) {
+  if (scene.textures.exists(key)) scene.textures.remove(key);
+  const texture = scene.textures.createCanvas(key, Math.ceil(width), Math.ceil(height));
+  const ctx = texture.getContext();
+  dibujar(ctx, Math.ceil(width), Math.ceil(height));
+  texture.refresh();
+  return key;
+}
+const redondear = (ctx, x, y, w, h, r, fill, stroke) => {
+  ctx.beginPath(); ctx.roundRect(x,y,w,h,r);
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();}
+};
+function colina(ctx, anchura, alto, base, amplitud, color, fase, frecuencia=1) {
+  ctx.beginPath(); ctx.moveTo(0, alto);
+  for(let x=0;x<=anchura;x+=12) {
+    const v=base + Math.sin(x/anchura*2*Math.PI*frecuencia+fase)*amplitud + Math.sin(x/anchura*4*Math.PI*frecuencia+fase*.5)*amplitud*.28;
+    ctx.lineTo(x,v);
+  }
+  ctx.lineTo(anchura,alto); ctx.closePath(); ctx.fillStyle=color;ctx.fill();
+}
+function dibujarEscenario(scene, W, H, suelo) {
+  const L=1800;
+  crearTextura(scene,'sky',W,H,(c,w,h)=>{
+    const g=c.createLinearGradient(0,0,0,h); g.addColorStop(0,'#ffe6ba');g.addColorStop(.42,'#ffc79d');g.addColorStop(1,'#f5b17c');c.fillStyle=g;c.fillRect(0,0,w,h);
+    const sx=w*.78,sy=h*.22,rr=Math.min(w*.25,145);
+    const glow=c.createRadialGradient(sx,sy,5,sx,sy,rr*2.3);glow.addColorStop(0,'#fff9c9aa');glow.addColorStop(.53,'#ffe4a899');glow.addColorStop(1,'#ffddab00');c.fillStyle=glow;c.fillRect(sx-rr*2.5,sy-rr*2.5,rr*5,rr*5);
+    c.beginPath();c.arc(sx,sy,rr*.52,0,Math.PI*2);c.fillStyle='#ffefd0';c.fill();
+    c.strokeStyle='#fff4df8c';c.lineWidth=3;
+    for(let i=0;i<6;i++){let x=(i*.22+.05)*w,y=(.15+(i%3)*.1)*h;c.beginPath();c.moveTo(x,y);c.quadraticCurveTo(x+35,y-10,x+75,y);c.stroke();}
+    // Finas motas del aire, siempre en segundo plano.
+    for(let i=0;i<65;i++){let x=(i*131.7)%w,y=((i*83.3)%Math.max(20,suelo));c.fillStyle='#fff9dd45';c.fillRect(x,y,2,2);}
+  });
+  crearTextura(scene,'mesas',L,H,(c,w,h)=>{
+    const horizon=suelo-Math.min(h*.31,230);
+    for(let i=-1;i<7;i++){
+      const x=i*342+70, y=horizon+(i%2)*23, mw=180+(i%3)*30, mh=80+(i%3)*28;
+      c.fillStyle='#c98273a1';c.beginPath();c.moveTo(x,y+mh);c.lineTo(x+20,y+25);c.quadraticCurveTo(x+29,y+16,x+48,y+16);c.lineTo(x+68,y+9);c.lineTo(x+mw-43,y+9);c.lineTo(x+mw-24,y+24);c.lineTo(x+mw,y+mh);c.closePath();c.fill();
+      c.fillStyle='#f7b49f68';c.fillRect(x+53,y+17,mw-110,6);
+      c.strokeStyle='#a9686270';c.lineWidth=4;c.beginPath();c.moveTo(x+25,y+55);c.lineTo(x+mw-22,y+55);c.stroke();
+    }
+    colina(c,w,h,suelo-115,35,'#dc987e',1.3);
+  });
+  crearTextura(scene,'dunas-lejos',L,H,(c,w,h)=>{
+    colina(c,w,h,suelo-104,44,'#e7ac85',.35);
+    for(let i=0;i<19;i++){
+      let x=70+i*102,y=suelo-99+Math.sin(x/w*2*Math.PI+.35)*44;
+      c.strokeStyle='#8e956f70';c.lineWidth=5;c.lineCap='round';c.beginPath();c.moveTo(x,y+5);c.lineTo(x,y-18);c.moveTo(x,y-6);c.lineTo(x-10,y-6);c.lineTo(x-10,y-14);c.stroke();
+    }
+  });
+  crearTextura(scene,'dunas-cerca',L,H,(c,w,h)=>{
+    colina(c,w,h,suelo-42,30,'#edb27d',.7);
+    for(let i=0;i<28;i++) {
+      const x=(i*77+33)%w, y=suelo-23+Math.sin(x/w*2*Math.PI+.7)*30;
+      c.strokeStyle='#bd8c60a6';c.lineWidth=2;c.beginPath();c.moveTo(x,y);c.lineTo(x-7,y-6);c.moveTo(x,y);c.lineTo(x+7,y-5);c.stroke();
+    }
+  });
+  crearTextura(scene,'arena',L,Math.max(140,H-suelo),(c,w,h)=>{
+    const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#e9ad72');g.addColorStop(.32,'#d99b66');g.addColorStop(1,'#b87457');c.fillStyle=g;c.fillRect(0,0,w,h);
+    c.strokeStyle='#ffdfaa';c.lineWidth=6;c.beginPath();c.moveTo(0,2);c.lineTo(w,2);c.stroke();
+    c.strokeStyle='#f9d39e66';c.lineWidth=2;
+    for(let i=0;i<85;i++) {let x=i*43.7,y=20+(i*37.1)%(h-20);c.beginPath();c.moveTo(x,y);c.quadraticCurveTo(x+17,y-4,x+36,y);c.stroke();}
+    for(let i=0;i<105;i++) {let x=(i*137.1)%w,y=(i*53.3)%h;c.fillStyle=i%2?'#bd7c5566':'#fff0bb8a';c.beginPath();c.ellipse(x,y,2+(i%4),1+(i%3)*.6,0,0,Math.PI*2);c.fill();}
+  });
+  const layer=(key,depth,ratio)=>scene.add.tileSprite(0,0,W,H,key).setOrigin(0).setScrollFactor(0).setDepth(depth).setData('parallax',ratio);
+  const sky=scene.add.image(0,0,'sky').setOrigin(0).setDepth(-20);
+  const mesas=layer('mesas',-12,.11), far=layer('dunas-lejos',-9,.25),near=layer('dunas-cerca',-7,.44);
+  const floor=scene.add.tileSprite(0,suelo,W,Math.max(H-suelo,140),'arena').setOrigin(0).setDepth(-2);
+  return {sky,mesas,far,near,floor};
+}
+function crearCactus(scene) {
+  const cactus=(key,width,height,variacion)=>crearTextura(scene,key,width,height,(c,w,h)=>{
+    c.translate(w*.51,0); c.lineCap='round';c.lineJoin='round';
+    const draw=(stroke,line)=>{c.lineWidth=line;c.strokeStyle=stroke;c.beginPath();c.moveTo(0,h*.92);c.lineTo(-3,h*.18);c.quadraticCurveTo(-2,h*.11,4,h*.1);c.moveTo(-2,h*.60);c.lineTo(-w*.23,h*.6);c.quadraticCurveTo(-w*.34,h*.6,-w*.34,h*.47);c.lineTo(-w*.34,h*.35);c.moveTo(1,h*.73);c.lineTo(w*.24,h*.73);c.quadraticCurveTo(w*.35,h*.73,w*.35,h*.6);c.lineTo(w*.35,h*.45);c.stroke();};
+    c.shadowColor='#744b3670';c.shadowBlur=13;c.shadowOffsetY=6;draw('#366851',w*.20);c.shadowColor='transparent';draw(variacion?'#56886a':'#3e866d',w*.145);draw('#80b38a77',w*.046);
+    c.strokeStyle='#d6ddb277';c.lineWidth=1.6;
+    for(let i=0;i<9;i++){const y=h*(.22+i*.073);c.beginPath();c.moveTo(-w*.055,y);c.lineTo(-w*.105,y-4);c.moveTo(w*.04,y+2);c.lineTo(w*.087,y-2);c.stroke();}
+    if(variacion){c.fillStyle='#f2b09e';for(let i=0;i<3;i++){c.beginPath();c.arc(-5+i*5,h*.1-(i%2)*3,3.5,0,Math.PI*2);c.fill();}}
+  });
+  cactus('cactus-grande',120,154,false);cactus('cactus-chico',100,124,true);
+}
+function crearTesoro(scene) {
+  const cosa=EMOJI_OBJETO||'⭐';
+  crearTextura(scene,'tesoro',80,80,(c,w,h)=>{
+    const glow=c.createRadialGradient(40,40,5,40,40,38);glow.addColorStop(0,'#fffbd4bb');glow.addColorStop(1,'#fffac900');c.fillStyle=glow;c.fillRect(0,0,w,h);
+    c.shadowColor='#a66c34aa';c.shadowBlur=10;c.shadowOffsetY=4;c.beginPath();c.arc(40,40,26,0,Math.PI*2);const grad=c.createLinearGradient(20,15,62,65);grad.addColorStop(0,'#ffe7a0');grad.addColorStop(.5,'#fbc45f');grad.addColorStop(1,'#e7983e');c.fillStyle=grad;c.fill();c.shadowColor='transparent';c.strokeStyle='#fff3ba';c.lineWidth=4;c.stroke();
+    c.font='29px "Apple Color Emoji","Segoe UI Emoji",sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(cosa,40,41);
+    c.fillStyle='#ffffffcc';c.beginPath();c.ellipse(26,23,6,2,-.7,0,Math.PI*2);c.fill();
+  });
+}
+function crearPersonajeIlustrado(scene) {
+  crearTextura(scene,'aventurero',155,206,(c,w,h)=>{
+    c.lineCap='round';c.lineJoin='round';
+    // sombra de perfil, piernas y zapatos
+    c.strokeStyle='#4e514f';c.lineWidth=17;c.beginPath();c.moveTo(72,148);c.lineTo(58,182);c.moveTo(95,149);c.lineTo(103,182);c.stroke();
+    c.strokeStyle='#f7eee1';c.lineWidth=14;c.beginPath();c.moveTo(58,184);c.lineTo(42,187);c.moveTo(104,184);c.lineTo(124,187);c.stroke();
+    c.strokeStyle='#a46555';c.lineWidth=3;c.beginPath();c.moveTo(43,190);c.lineTo(59,190);c.moveTo(108,190);c.lineTo(126,190);c.stroke();
+    // mochila lateral
+    redondear(c,27,82,45,70,18,'#e9a052','#b37643');
+    redondear(c,36,94,33,26,10,'#eeba70');
+    // torso y mangas
+    c.beginPath();c.moveTo(53,88);c.quadraticCurveTo(78,74,101,89);c.lineTo(114,150);c.quadraticCurveTo(83,166,50,150);c.closePath();
+    const shirt=c.createLinearGradient(50,90,108,151);shirt.addColorStop(0,'#ffb88c');shirt.addColorStop(1,'#dd765e');c.fillStyle=shirt;c.fill();c.strokeStyle='#a65f51';c.lineWidth=3;c.stroke();
+    c.strokeStyle='#f1b18c';c.lineWidth=13;c.beginPath();c.moveTo(54,100);c.lineTo(39,126);c.moveTo(104,101);c.lineTo(125,121);c.stroke();
+    c.fillStyle='#f5c1a1';c.beginPath();c.arc(38,129,8,0,Math.PI*2);c.arc(126,124,8,0,Math.PI*2);c.fill();
+    // cabeza y pelo
+    c.fillStyle='#543c34';c.beginPath();c.ellipse(80,46,42,46,-.06,0,Math.PI*2);c.fill();
+    c.beginPath();c.ellipse(80,55,35,36,0,0,Math.PI*2);c.fillStyle='#f4bd98';c.fill();
+    c.fillStyle='#533832';c.beginPath();c.moveTo(44,49);c.quadraticCurveTo(34,0,82,10);c.quadraticCurveTo(125,6,116,54);c.quadraticCurveTo(111,38,104,32);c.quadraticCurveTo(81,48,63,37);c.quadraticCurveTo(56,47,44,49);c.fill();
+    c.fillStyle='#3d322c';c.beginPath();c.arc(69,58,2.8,0,Math.PI*2);c.arc(94,58,2.8,0,Math.PI*2);c.fill();
+    c.strokeStyle='#b76556';c.lineWidth=2;c.beginPath();c.arc(81,69,8,.12,Math.PI-.12);c.stroke();
+    c.fillStyle='#e9917c99';c.beginPath();c.ellipse(56,68,8,4,0,0,Math.PI*2);c.ellipse(106,68,8,4,0,0,Math.PI*2);c.fill();
+    // pañuelo y sombrero de explorador
+    c.strokeStyle='#f8d271';c.lineWidth=8;c.beginPath();c.moveTo(62,91);c.quadraticCurveTo(83,101,102,91);c.stroke();
+    c.fillStyle='#fff1d0';c.beginPath();c.ellipse(79,27,52,11,0,0,Math.PI*2);c.fill();
+    c.fillStyle='#e6a866';c.beginPath();c.moveTo(47,23);c.lineTo(53,6);c.quadraticCurveTo(79,-3,107,6);c.lineTo(113,23);c.closePath();c.fill();
+    c.fillStyle='#bf7554';c.fillRect(49,19,61,6);
+    c.strokeStyle='#fff3d9';c.lineWidth=3;c.beginPath();c.moveTo(59,13);c.quadraticCurveTo(76,9,94,12);c.stroke();
+  });
+}
+function soltarPolvo(scene, x,y, cantidad=3) {
+  for(let i=0;i<cantidad;i++){
+    const cx=x-11+Math.random()*25;
+    const circle=scene.add.circle(cx,y,2+Math.random()*4,0xffe1b2,.6).setDepth(5);
+    scene.tweens.add({targets:circle,x:cx-15-Math.random()*23,y:y-5-Math.random()*26,alpha:0,scale:2,duration:480+Math.random()*210,onComplete:()=>circle.destroy()});
+  }
+}
+
+class EscenaJuego extends Phaser.Scene {
+  constructor(){super('EscenaJuego');}
+  init(data){this.prevDistance=data?.distance||0;this.prevCount=data?.contador||0;}
+  preload(){
+    // Si ponés personaje-cabeza.png junto a este HTML, lo usamos.
+    // Si el archivo no está, aparece nuestro personaje ilustrado de ejemplo.
+    if(!this.textures.exists('personajeFoto'))this.load.image('personajeFoto','personaje-cabeza.png');
+  }
+  create(){
+    $('invitation-view').style.display='none';$('game-hud').style.display='block';
+    this.W=this.scale.width;this.H=this.scale.height;
+    this.suelo=Math.round(this.H*(this.H<550?.77:.76));
+    this.suelo=Math.min(this.suelo,this.H-110);
+    this.playerHeight=Phaser.Math.Clamp(this.H*.245,106,176);
+    if(this.W<470)this.playerHeight=Phaser.Math.Clamp(this.W*.36,112,152);
+    this.personaX=Phaser.Math.Clamp(this.W*.22,90,Math.max(110,this.W*.25));
+    this.distancia=this.prevDistance;this.contador=this.prevCount;
+    this.alturaSalto=0;this.velSalto=0;this.lastDust=0;this.hitCooldown=0;this.terminado=false;
+    this.capa=dibujarEscenario(this,this.W,this.H,this.suelo);
+    crearCactus(this);crearTesoro(this);crearPersonajeIlustrado(this);
+    const usarFoto=this.textures.exists('personajeFoto');
+    this.avatar=this.add.image(this.personaX,this.suelo,usarFoto?'personajeFoto':'aventurero').setOrigin(.5,1).setDepth(8);
+    // No deformamos la imagen real. Conservamos siempre su proporción.
+    const source=this.textures.get(this.avatar.texture.key).getSourceImage();
+    const ratio=source.width/source.height;const h=this.playerHeight;
+    this.avatar.setDisplaySize(h*ratio,h);
+    this.sombra=this.add.ellipse(this.personaX,this.suelo+6,h*.62,15,0x87553b,.25).setDepth(3);
+    this.obstaculos=[];
+    for(let x=1080,i=0;x<DISTANCIA_NIVEL-600;x+=900+(i%3)*135,i++) {
+      const grande=i%3!==1;
+      const height=grande?Phaser.Math.Clamp(this.playerHeight*.72,83,125):Phaser.Math.Clamp(this.playerHeight*.55,66,96);
+      const sprite=this.add.image(0,this.suelo,grande?'cactus-grande':'cactus-chico').setOrigin(.5,1).setDepth(4);
+      sprite.setDisplaySize(height*(grande?120/154:100/124),height);
+      this.obstaculos.push({x,sprite,height,toco:false});
+    }
+    this.objetos=[];
+    for(let i=0;i<24;i++){
+      const x=480+i*535;
+      const alto=i%4===0?this.playerHeight*1.12:this.playerHeight*.58;
+      const sprite=this.add.image(0,this.suelo-alto,'tesoro').setDepth(5).setScale(this.W<500?.78:.85);
+      const tomado=x<this.distancia-40;
+      if(tomado)sprite.setVisible(false);
+      this.objetos.push({x,alto,sprite,tomado});
+    }
+    this.salto=()=>this.saltar();
+    $('jump-btn').onclick=this.salto;
+    $('hud-skip').onclick=()=>this.abrirInvitacion();
+    this.input.on('pointerdown',(pointer)=>{if(pointer.downElement?.tagName==='CANVAS')this.saltar();});
+    if(this.input.keyboard){this.input.keyboard.on('keydown-SPACE',this.salto);this.input.keyboard.on('keydown-UP',this.salto);}
+    this.onResize=()=>this.scene.restart({distance:this.distancia,contador:this.contador});
+    this.scale.on('resize',this.onResize);
+    this.events.once('shutdown',()=>{this.scale.off('resize',this.onResize);$('jump-btn').onclick=null;$('hud-skip').onclick=null;if(this.input.keyboard){this.input.keyboard.off('keydown-SPACE',this.salto);this.input.keyboard.off('keydown-UP',this.salto);}});
+    $('hud-count').innerHTML=`${escaparHTML(EMOJI_OBJETO)} <strong>${Math.min(this.contador,10)} / ${OBJETOS_PARA_GANAR}</strong>`;
+    if(SONIDO_ACTIVADO&&musicaJuego)musicaJuego.iniciar();
+  }
+  saltar(){
+    if(this.terminado||this.alturaSalto>1)return;
+    this.velSalto=-Math.max(625,this.playerHeight*4.75);
+    this.alturaSalto=2;
+    $('jump-btn').classList.add('pressed');setTimeout(()=>$('jump-btn').classList.remove('pressed'),130);
+    soltarPolvo(this,this.personaX-28,this.suelo,5);
+  }
+  tomar(obj){
+    obj.tomado=true;
+    this.contador++;
+    this.tweens.add({targets:obj.sprite,alpha:0,scale:1.5,y:obj.sprite.y-48,duration:240,ease:'Sine.Out',onComplete:()=>obj.sprite.setVisible(false)});
+    $('hud-count').innerHTML=`${escaparHTML(EMOJI_OBJETO)} <strong>${Math.min(this.contador,10)} / ${OBJETOS_PARA_GANAR}</strong>`;
+    for(let i=0;i<5;i++){
+      const spark=this.add.circle(this.personaX+8,this.suelo-this.playerHeight*.65-this.alturaSalto,2.5,0xffefb0).setDepth(9);
+      const a=i*Math.PI*2/5;
+      this.tweens.add({targets:spark,x:spark.x+Math.cos(a)*33,y:spark.y+Math.sin(a)*33,alpha:0,duration:350,onComplete:()=>spark.destroy()});
+    }
+  }
+  tropezar(obstaculo){
+    obstaculo.toco=true;this.hitCooldown=.8;
+    this.avatar.setTint(0xf6a0a0);this.time.delayedCall(220,()=>this.avatar?.clearTint());
+    this.cameras.main.shake(140,.0024);soltarPolvo(this,this.personaX+25,this.suelo,6);
+  }
+  abrirInvitacion(){
+    if(this.terminado)return;this.terminado=true;
+    if(musicaJuego)musicaJuego.detener();
+    $('game-hud').style.display='none';
+    this.scene.start('EscenaInvitacion');
+  }
+  update(_time,delta){
+    if(this.terminado)return;
+    const dt=Math.min(delta/1000,.045);
+    this.distancia+=VELOCIDAD_SCROLL*dt;
+    // salto y aterrizaje
+    if(this.alturaSalto>0||this.velSalto!==0){
+      this.velSalto+=1850*dt;this.alturaSalto-=this.velSalto*dt;
+      if(this.alturaSalto<=0){this.alturaSalto=0;this.velSalto=0;soltarPolvo(this,this.personaX-18,this.suelo,3);}
+    }
+    this.avatar.y=this.suelo-this.alturaSalto+(this.alturaSalto===0?Math.sin(this.distancia*.075)*2.7:0);
+    this.avatar.angle=this.alturaSalto?Phaser.Math.Clamp(this.velSalto/120,-7,7):Math.sin(this.distancia*.07)*1.6;
+    this.sombra.scaleX=1+Math.min(this.alturaSalto/400,.5);this.sombra.alpha=Math.max(.08,.25-this.alturaSalto/900);
+    const sprites=[this.capa.mesas,this.capa.far,this.capa.near];
+    sprites.forEach(l=>l.tilePositionX=this.distancia*l.getData('parallax'));
+    this.capa.floor.tilePositionX=this.distancia*.97;
+    const absX=this.personaX;
+    this.objetos.forEach((obj,i)=>{
+      if(obj.tomado)return;
+      const visibleX=absX+obj.x-this.distancia;
+      obj.sprite.x=visibleX;
+      obj.sprite.y=this.suelo-obj.alto+Math.sin(this.distancia*.012+i)*7;
+      obj.sprite.visible=visibleX>-80&&visibleX<this.W+90;
+      const centroPersonaje=this.suelo-this.alturaSalto-this.playerHeight*.52;
+      if(Math.abs(visibleX-absX)<48&&Math.abs(centroPersonaje-obj.sprite.y)<this.playerHeight*.31+20)this.tomar(obj);
+    });
+    this.obstaculos.forEach(ob=>{
+      const x=absX+ob.x-this.distancia;
+      ob.sprite.x=x;ob.sprite.visible=x>-130&&x<this.W+140;
+      if(!ob.toco&&this.hitCooldown<=0&&Math.abs(x-absX)<38&&this.alturaSalto<ob.height*.64)this.tropezar(ob);
+    });
+    if(this.hitCooldown>0)this.hitCooldown-=dt;
+    if(this.alturaSalto===0&&this.distancia-this.lastDust>72){this.lastDust=this.distancia;soltarPolvo(this,this.personaX-17,this.suelo,2);}
+    $('progress-fill').style.width=Math.min(100,(this.distancia/DISTANCIA_NIVEL)*100)+'%';
+    if(this.distancia>=DISTANCIA_NIVEL)this.abrirInvitacion();
+  }
+}
+
+/* =============================================================
+   TARJETA FINAL: mismos datos y RSVP de tu proyecto original,
+   nueva presentación estética y adaptada a celular/computadora.
+   ============================================================= */
+function renderFormularioRSVP(){
+  const cont=$('rsvp-form-estado');const previo=obtenerRSVPGuardado(ID_INVITACION);
+  if(previo){
+    cont.innerHTML=`<div class="rsvp-saved"><strong>${previo.asiste?'✅ ¡Confirmaste tu asistencia!':'💌 Recibimos tu respuesta'}</strong><p>${escaparHTML(previo.nombre)}${previo.asiste?' · '+escaparHTML(previo.cantidad)+' persona(s)':''}</p>${previo.mensaje?'<p>“'+escaparHTML(previo.mensaje)+'”</p>':''}${previo.pendiente?'<p style="color:#a55335;font-size:13px">Tu respuesta quedó guardada en este dispositivo, pero falta enviarla. Revisá tu conexión.</p><button id="rsvp-reintentar" class="secondary-btn" type="button">Reintentar envío</button>':''}<button id="rsvp-editar" class="secondary-btn" type="button">Editar respuesta</button></div>`;
+    $('rsvp-editar').onclick=mostrarFormulario;
+    if($('rsvp-reintentar'))$('rsvp-reintentar').onclick=async()=>{await guardarRSVP(ID_INVITACION,previo);renderFormularioRSVP();};
+  } else mostrarFormulario();
+  function mostrarFormulario(){
+    cont.innerHTML=`<label class="rsvp-label" for="rsvp-nombre">TU NOMBRE</label><input class="rsvp-input" id="rsvp-nombre" placeholder="¿Cómo te llamás?" autocomplete="name" maxlength="100">
+    <div class="rsvp-options"><button class="rsvp-opt" data-asiste="si" type="button">🎉 ¡Sí, voy!</button><button class="rsvp-opt" data-asiste="no" type="button">💌 No puedo</button></div>
+    <div id="rsvp-cantidad-cont" style="display:none"><label class="rsvp-label" for="rsvp-cantidad">¿CUÁNTAS PERSONAS VAN?</label><input id="rsvp-cantidad" class="rsvp-input" type="number" min="1" max="10" value="1"></div>
+    <label class="rsvp-label" for="rsvp-mensaje">DEJÁ UN MENSAJE (OPCIONAL)</label><textarea id="rsvp-mensaje" class="rsvp-input" rows="2" maxlength="700" placeholder="Escribí algo lindo..."></textarea>
+    <button class="submit-btn" id="rsvp-enviar" type="button" disabled>Confirmar asistencia</button><p id="rsvp-error" style="color:#ac4635;font-size:13px"></p>`;
+    let asistencia=null;const input=$('rsvp-nombre'),enviar=$('rsvp-enviar');
+    const actualizado=()=>enviar.disabled=!(input.value.trim()&&asistencia!==null);
+    [...cont.querySelectorAll('.rsvp-opt')].forEach(btn=>btn.onclick=()=>{
+      asistencia=btn.dataset.asiste==='si';cont.querySelectorAll('.rsvp-opt').forEach(b=>b.classList.remove('active'));btn.classList.add('active');$('rsvp-cantidad-cont').style.display=asistencia?'block':'none';actualizado();
+    });
+    input.oninput=actualizado;
+    enviar.onclick=async()=>{
+      const nombre=input.value.trim();if(!nombre||asistencia===null)return;
+      enviar.disabled=true;enviar.textContent='Enviando...';
+      const cantidad=asistencia?Phaser.Math.Clamp(parseInt($('rsvp-cantidad').value,10)||1,1,10):0;
+      const datos={nombre,asiste:asistencia,cantidad,mensaje:$('rsvp-mensaje').value.trim(),fecha:new Date().toISOString()};
+      try{await guardarRSVP(ID_INVITACION,datos);renderFormularioRSVP();}
+      catch(error){$('rsvp-error').textContent='No se pudo guardar. Probá nuevamente.';enviar.disabled=false;enviar.textContent='Volver a intentar';}
+    };
+  }
+}
+function construirTarjetaInvitacion(){
+  $('invite-names').textContent=INVITACION.nombres;
+  $('invite-kind').textContent=INVITACION.tipoEvento;
+  $('invite-details').innerHTML=`
+    <div class="detail-item"><p class="detail-label">📅 FECHA</p><div class="detail-value">${escaparHTML(INVITACION.fecha)}</div></div>
+    <div class="detail-item"><p class="detail-label">🕒 HORA</p><div class="detail-value">${escaparHTML(INVITACION.hora)}</div></div>
+    <div class="detail-item wide"><p class="detail-label">📍 LUGAR</p><div class="detail-value">${escaparHTML(INVITACION.lugar)}</div><p class="detail-sub">${escaparHTML(INVITACION.direccion)}</p></div>`;
+  const url=location.origin+location.pathname+'?id='+encodeURIComponent(ID_INVITACION);
+  const map=linkMaps(INVITACION.direccion),calendar=linkCalendario(INVITACION);
+  let html='';
+  if(INVITACION.fechaHoraIso)html+='<div id="cuenta-regresiva"></div>';
+  html+=`<div class="invite-actions"><a href="${map}" target="_blank" rel="noopener noreferrer">📍 Cómo llegar</a>${calendar?`<a href="${calendar}" target="_blank" rel="noopener noreferrer">📅 Agendar</a>`:''}<a href="https://wa.me/?text=${encodeURIComponent('¡Te invito a mi evento! Mirá la invitación: '+url)}" target="_blank" rel="noopener noreferrer">↗ Compartir</a></div>`;
+  if(INVITACION.dressCode)html+=`<p style="font-size:14px;color:#815b45"><strong>👗 Código de vestimenta:</strong> ${escaparHTML(INVITACION.dressCode)}</p>`;
+  if(INVITACION.regaloTexto||INVITACION.regaloDatos){
+    html+='<div class="gift-card">';
+    if(INVITACION.regaloTexto)html+=`<div>🎁 ${escaparHTML(INVITACION.regaloTexto)}</div>`;
+    if(INVITACION.regaloDatos)html+=`<div class="gift-line"><code>${escaparHTML(INVITACION.regaloDatos)}</code><button id="regalo-copiar" type="button" class="secondary-btn">Copiar</button></div>`;
+    html+='</div>';
+  }
+  html+=`<div class="qr-section">CÓDIGO QR DE ESTA INVITACIÓN<div id="qr-contenedor"></div><a id="qr-descargar" download="invitacion-${escaparHTML(ID_INVITACION)}.png" style="display:none">Descargar mi QR ↓</a></div>`;
+  $('info-extra').innerHTML=html;
+  if($('regalo-copiar'))$('regalo-copiar').onclick=async()=>{
+    try{await navigator.clipboard.writeText(INVITACION.regaloDatos);$('regalo-copiar').textContent='¡Copiado!';}
+    catch(e){$('regalo-copiar').textContent='Seleccioná y copiá el alias';}
+  };
+  if(INVITACION.fechaHoraIso){
+    const actualizar=()=>{const el=$('cuenta-regresiva');if(el)el.textContent='⏳ '+formatearCuentaRegresiva(INVITACION.fechaHoraIso);};
+    actualizar();if(intervaloCuentaRegresiva)clearInterval(intervaloCuentaRegresiva);intervaloCuentaRegresiva=setInterval(actualizar,1000);
+  }
+  // El QR es un extra: si falla la librería o no hay Internet, la tarjeta funciona igual.
+  if(typeof QRCode!=='undefined')generarQRDataURL(url).then(data=>{
+    if(!data||!$('qr-contenedor'))return;
+    const img=document.createElement('img');img.src=data;img.alt='QR de la invitación';img.width=160;img.height=160;$('qr-contenedor').replaceChildren(img);
+    const link=$('qr-descargar');if(link){link.href=data;link.style.display='inline';}
+  });
+}
+class EscenaInvitacion extends Phaser.Scene{
+  constructor(){super('EscenaInvitacion');}
+  create(){
+    $('game-hud').style.display='none';
+    $('invitation-view').style.display='block';
+    $('invitation-view').scrollTop=0;
+    construirTarjetaInvitacion();renderFormularioRSVP();
+    $('volver-jugar').style.display=INVITACION.incluyeJuego?'block':'none';
+    $('volver-jugar').onclick=()=>{
+      if(intervaloCuentaRegresiva){clearInterval(intervaloCuentaRegresiva);intervaloCuentaRegresiva=null;}
+      $('invitation-view').style.display='none';this.scene.start('EscenaJuego');
+    };
+  }
+}
+async function iniciar(){
+  $('game-container').innerHTML='<div style="height:100%;display:grid;place-items:center;font:700 20px Fredoka,sans-serif;color:#754a35">Preparando tu aventura... ✦</div>';
+  ID_INVITACION=obtenerIdDeLaUrl();
+  try{INVITACION=await cargarInvitacion(ID_INVITACION);}
+  catch(e){console.warn('Se utilizarán datos de demostración:',e);INVITACION=CATALOGO_DEMO[ID_INVITACION]||CATALOGO_DEMO.demo;}
+  EMOJI_OBJETO=EMOJI_OBJETOS[INVITACION.objeto]||'⭐';
+  COLOR_OBJETO=COLOR_OBJETOS[INVITACION.objeto]||0xffd93d;
+  SIMBOLO_FINAL=EMOJI_FINAL[INVITACION.tipoEvento]||'🎉';
+  const comenzar=INVITACION.incluyeJuego?await animarInicio():false;
+  $('game-container').innerHTML='';
+  if(typeof Phaser==='undefined'){
+    $('game-container').innerHTML='<div style="padding:36px;margin:50px auto;max-width:500px;border-radius:20px;background:#fff8e8;text-align:center;font-size:16px">No se pudo cargar el motor del juego. Conectate a Internet y recargá esta página.</div>';return;
+  }
+  instanciaJuego=new Phaser.Game({
+    type:Phaser.AUTO,width:window.innerWidth,height:window.innerHeight,
+    backgroundColor:'#f5c28c',parent:'game-container',
+    scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},
+    render:{antialias:true,pixelArt:false},
+    scene:INVITACION.incluyeJuego?(comenzar?[EscenaJuego,EscenaInvitacion]:[EscenaInvitacion,EscenaJuego]):[EscenaInvitacion]
+  });
+}
+window.addEventListener('DOMContentLoaded',iniciar);
+
 </script>
 </body>
 </html>
