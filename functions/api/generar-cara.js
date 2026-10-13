@@ -5,13 +5,13 @@
 // riesgo de que alguien la vea mirando el código de la página.
 //
 // Qué hace: recibe una foto (enviada desde una página con un formulario),
-// le pide a OpenAI que la convierta en un retrato tipo dibujo animado, y
-// devuelve esa imagen nueva.
+// le pide a OpenAI que la convierta en un personaje estilo doodle (cabeza
+// y torso, sin piernas), y devuelve esa imagen nueva.
 //
 // Esta es una PRUEBA AISLADA: todavía no está conectada al juego. La idea
-// es primero confirmar que esta conexión con OpenAI funciona bien sola,
-// antes de meterla dentro del flujo real (donde se pegaría la cara sobre
-// el cuerpo del personaje).
+// es primero confirmar que el estilo y el recorte salen bien, antes de
+// meterla dentro del flujo real (donde se le van a agregar piernas
+// animadas por código, no generadas por la IA).
 // ======================================================
 
 export async function onRequestPost(context) {
@@ -42,13 +42,22 @@ export async function onRequestPost(context) {
     formParaOpenAI.append('image', foto, 'foto.png');
     formParaOpenAI.append(
       'prompt',
-      'Convertí esta foto de una persona en un retrato de personaje de dibujos animados ' +
-      'estilo videojuego simple y alegre, 2D, colores vivos, trazo limpio tipo caricatura. ' +
-      'Mantené el parecido de la persona (forma de cara, pelo, color de piel). ' +
-      'Mostrá solo la cabeza y el cuello, mirando de frente, fondo liso de color claro.'
+      'Generá un personaje estilo "doodle" minimalista y tierno (como un sticker de boda cute), ' +
+      'de cuerpo entero PERO CORTADO A LA ALTURA DE LA CADERA: incluí cabeza, torso y brazos, ' +
+      'SIN piernas ni cadera (el dibujo termina en una línea limpia horizontal a la altura de ' +
+      'donde empezarían las piernas). Cabeza grande y redonda en proporción al torso, que es ' +
+      'chico y simple. Pelo como una forma sólida de color plano, SIN mechones ni textura. Ojos ' +
+      'simples (puntitos o líneas curvas), boca como una línea curva simple, mejillas con un ' +
+      'toque de color rosado. Brazos finos tipo línea. TODOS los colores sólidos y lisos, SIN ' +
+      'sombreados, SIN degradados, sin textura de ningún tipo. Inspirate en el pelo, tono de ' +
+      'piel y vibra general de la foto, pero el resultado final tiene que verse como un dibujo ' +
+      'plano, no como una ilustración realista. De pie, mirando de frente. Fondo completamente ' +
+      'transparente, nada alrededor del personaje.'
     );
     formParaOpenAI.append('size', '1024x1024');
     formParaOpenAI.append('quality', 'low'); // la más económica: para una cara chica no hace falta más resolución
+    formParaOpenAI.append('background', 'transparent'); // esto saca el fondo de color que vimos en la prueba
+    formParaOpenAI.append('output_format', 'png'); // hace falta png (o webp) para que la transparencia funcione
     formParaOpenAI.append('n', '1');
 
     const respuestaOpenAI = await fetch('https://api.openai.com/v1/images/edits', {
