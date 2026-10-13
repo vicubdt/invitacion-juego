@@ -65,33 +65,62 @@ function obtenerIdDeLaUrl() {
   return params.get('id') || 'demo';
 }
 
-function cargarInvitacion(id) {
-  // 1) ¿Está en la lista de ejemplos? (mañana, esto sería "¿está en la base de datos?")
-  if (CATALOGO_DEMO[id]) {
-    // La guardamos también en el celu, por si el día de mañana se corta la
-    // conexión justo cuando alguien recarga la página a mitad de partida.
-    localStorage.setItem('invitacion_' + id, JSON.stringify(CATALOGO_DEMO[id]));
-    return CATALOGO_DEMO[id];
+// La fila de la tabla "invitaciones" en Supabase usa nombres de columna
+// con guión bajo (tipo_evento); el resto del código usa camelCase
+// (tipoEvento). Esta función hace esa traducción en un solo lugar.
+function normalizarInvitacion(fila) {
+  return {
+    nombres: fila.nombres,
+    tipoEvento: fila.tipo_evento,
+    fecha: fila.fecha,
+    hora: fila.hora,
+    lugar: fila.lugar,
+    direccion: fila.direccion,
+    objeto: fila.objeto,
+  };
+}
+
+async function cargarInvitacion(id) {
+  // 1) Buscarla en la base de datos real (Supabase) — esta es la fuente
+  //    de verdad: acá es donde van a vivir las invitaciones de verdad.
+  try {
+    const { data, error } = await clienteDB
+      .from('invitaciones')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    if (data) {
+      const invitacion = normalizarInvitacion(data);
+      // La guardamos también en el celu, por si el día de mañana se corta
+      // la conexión justo cuando alguien recarga la página a mitad de partida.
+      localStorage.setItem('invitacion_' + id, JSON.stringify(invitacion));
+      return invitacion;
+    }
+  } catch (error) {
+    console.error('No se pudo consultar Supabase, probamos con lo guardado en el celu:', error);
   }
-  // 2) Si no, ¿la teníamos guardada de una visita anterior?
+  // 2) Si no se pudo traer de la base (sin internet, Supabase caído, etc.),
+  //    ¿la teníamos guardada de una visita anterior en este mismo celu?
   const guardada = localStorage.getItem('invitacion_' + id);
   if (guardada) return JSON.parse(guardada);
-  // 3) Si no hay nada de nada, mostramos la de ejemplo para no romper la demo.
+  // 3) Catálogo de ejemplo embebido en el código, como último respaldo,
+  //    para que la demo nunca se rompa aunque falle todo lo demás.
+  if (CATALOGO_DEMO[id]) return CATALOGO_DEMO[id];
   return CATALOGO_DEMO.demo;
 }
 
-const ID_INVITACION = obtenerIdDeLaUrl();
-const INVITACION = cargarInvitacion(ID_INVITACION);
+// Estas variables arrancan vacías y se completan recién cuando termina de
+// cargar la invitación (ver "iniciar()" más abajo, al final del archivo).
+// Los métodos de las escenas del juego las usan, pero no se ejecutan hasta
+// después de que el juego arranca — para entonces, ya están completas.
+let ID_INVITACION, INVITACION, EMOJI_OBJETO, COLOR_OBJETO, SIMBOLO_FINAL;
 
 // El objeto a juntar y el símbolo final cambian según la invitación, sin
 // tocar el motor: están armados sobre un catálogo chico reutilizable.
 const EMOJI_OBJETOS = { frutilla: '🍓', estrella: '⭐', corazon: '❤️', mate: '🧉' };
 const COLOR_OBJETOS = { frutilla: 0xffd93d, estrella: 0xffd93d, corazon: 0xff6b6b, mate: 0x8fbc5a };
-const EMOJI_OBJETO = EMOJI_OBJETOS[INVITACION.objeto] || '🍓';
-const COLOR_OBJETO = COLOR_OBJETOS[INVITACION.objeto] || 0xffd93d;
 
 const EMOJI_FINAL = { 'Casamiento': '💍', 'Cumpleaños': '🎂', 'Quince años': '👑' };
-const SIMBOLO_FINAL = EMOJI_FINAL[INVITACION.tipoEvento] || '🎉';
 
 // ======================================================
 // CONEXIÓN A LA BASE DE DATOS (Supabase)
@@ -422,24 +451,42 @@ class EscenaInvitacion extends Phaser.Scene {
 }
 
 // ======================================================
-// CONFIGURACIÓN DEL MOTOR (Phaser)
+// ARRANQUE: primero cargamos los datos de la invitación (ahora vienen de
+// Supabase), y solo cuando ya los tenemos, arrancamos el motor del juego.
+// Como esto implica esperar una respuesta de internet, mostramos un
+// "Cargando..." breve mientras tanto en vez de una pantalla en blanco.
 // ======================================================
-new Phaser.Game({
-  type: Phaser.AUTO,
-  width: window.innerWidth,
-  height: window.innerHeight,
-  backgroundColor: '#87ceeb',
-  parent: 'game-container',
-  scale: {
-    mode: Phaser.Scale.RESIZE,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-  },
-  physics: {
-    default: 'arcade',
-    arcade: { gravity: { y: 1200 }, debug: false },
-  },
-  scene: [EscenaJuego, EscenaInvitacion],
-});
+async function iniciar() {
+  const contenedor = document.getElementById('game-container');
+  contenedor.innerHTML = '<div style="color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100%;font-size:16px;">Cargando...</div>';
+
+  ID_INVITACION = obtenerIdDeLaUrl();
+  INVITACION = await cargarInvitacion(ID_INVITACION);
+  EMOJI_OBJETO = EMOJI_OBJETOS[INVITACION.objeto] || '🍓';
+  COLOR_OBJETO = COLOR_OBJETOS[INVITACION.objeto] || 0xffd93d;
+  SIMBOLO_FINAL = EMOJI_FINAL[INVITACION.tipoEvento] || '🎉';
+
+  contenedor.innerHTML = '';
+
+  new Phaser.Game({
+    type: Phaser.AUTO,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    backgroundColor: '#87ceeb',
+    parent: 'game-container',
+    scale: {
+      mode: Phaser.Scale.RESIZE,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+    },
+    physics: {
+      default: 'arcade',
+      arcade: { gravity: { y: 1200 }, debug: false },
+    },
+    scene: [EscenaJuego, EscenaInvitacion],
+  });
+}
+
+iniciar();
 </script>
 </body>
 </html>
