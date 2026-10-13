@@ -560,8 +560,16 @@ class EscenaJuego extends Phaser.Scene {
     // salta. Más simple, más prolijo, y es justo lo que pidió Vicki.
     this.personaje = this.add.container(120, ALTO_JUEGO - 100);
 
-    const ALTO_PERSONAJE = 86; // alto del dibujo completo (cabeza a pies)
-    const ANCHO_PERSONAJE = Math.round(ALTO_PERSONAJE * 0.45); // proporción de una persona de pie
+    // IMPORTANTE: antes esto tenía un ancho "inventado" (fijo), que
+    // deformaba al personaje si la imagen real no tenía exactamente esa
+    // proporción (se veía aplastado o estirado). Ahora en vez de inventar
+    // el ancho, lo calculamos a partir del tamaño REAL de la imagen que
+    // llegó, así el personaje respeta siempre su proporción original, sea
+    // cual sea — nunca se deforma.
+    const ALTO_PERSONAJE = 86; // alto con el que se muestra en el juego
+    const imagenOriginal = this.textures.get('personaje').getSourceImage();
+    const PROPORCION_REAL = imagenOriginal.width / imagenOriginal.height;
+    const ANCHO_PERSONAJE = Math.round(ALTO_PERSONAJE * PROPORCION_REAL);
 
     this.torso = this.add.image(0, 0, 'personaje')
       .setDisplaySize(ANCHO_PERSONAJE, ALTO_PERSONAJE).setOrigin(0.5, 1); // origen abajo = apoya en el piso
