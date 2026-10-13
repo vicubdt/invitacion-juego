@@ -14,9 +14,20 @@
   }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 <div id="game-container"></div>
+
+<!-- El RSVP se hace con elementos HTML normales (no dibujados en el
+     juego), porque escribir texto a mano anda mucho mejor así: el
+     teclado del celu funciona de forma nativa y es accesible. Esta capa
+     solo se muestra arriba de la pantalla de la invitación. -->
+<div id="volver-jugar" style="display:none; position:fixed; top:10px; right:10px; z-index:11; font-size:13px; color:#cccccc; font-family:sans-serif; cursor:pointer;">↺ Jugar de nuevo</div>
+<div id="rsvp-card" style="display:none; position:fixed; left:0; right:0; bottom:0; max-height:55vh; overflow-y:auto; background:#15132a; border-top:2px solid #ffd93d; padding:16px; padding-bottom:max(16px, env(safe-area-inset-bottom)); box-sizing:border-box; font-family:sans-serif; color:#fff; z-index:10;">
+  <div id="rsvp-form-estado"></div>
+</div>
+
 <script>
 // ======================================================
 // CONFIGURACIÓN DE LA INVITACIÓN
@@ -81,6 +92,141 @@ const COLOR_OBJETO = COLOR_OBJETOS[INVITACION.objeto] || 0xffd93d;
 
 const EMOJI_FINAL = { 'Casamiento': '💍', 'Cumpleaños': '🎂', 'Quince años': '👑' };
 const SIMBOLO_FINAL = EMOJI_FINAL[INVITACION.tipoEvento] || '🎉';
+
+// ======================================================
+// CONEXIÓN A LA BASE DE DATOS (Supabase)
+//
+// La "SUPABASE_KEY" de acá abajo es una clave pública (publishable),
+// pensada para usarse en el navegador de cualquiera que abra la
+// invitación. No es una contraseña ni da acceso administrativo: la
+// tabla "respuestas_rsvp" tiene reglas (RLS) que solo permiten insertar
+// y leer respuestas, nada más.
+// ======================================================
+const SUPABASE_URL = 'https://ruxaofwsoihkcytepjiw.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_9NxRoWpnD3RCjF0BuPWfwQ_t-Bx6Zyq';
+const clienteDB = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ======================================================
+// RSVP (confirmación de asistencia)
+//
+// La respuesta se guarda en dos lugares a la vez:
+// 1) En el celu de quien responde (localStorage), para que si vuelve a
+//    entrar al mismo link, vea su propia respuesta y pueda editarla.
+// 2) En Supabase (la base de datos), para que vos puedas ver TODAS las
+//    respuestas juntas desde el panel de Supabase, sin depender del
+//    celu de cada invitado.
+// ======================================================
+function claveRSVP(id) { return 'rsvp_' + id; }
+
+function obtenerRSVPGuardado(id) {
+  const guardado = localStorage.getItem(claveRSVP(id));
+  return guardado ? JSON.parse(guardado) : null;
+}
+
+async function guardarRSVP(id, datos) {
+  // Guardamos primero en el celu: esto nunca falla y es lo que le
+  // permite al invitado ver/editar su respuesta aunque no haya señal.
+  localStorage.setItem(claveRSVP(id), JSON.stringify(datos));
+
+  // Después intentamos mandarla a la base de datos central. Si falla
+  // (por ejemplo, sin internet), no rompemos la experiencia del
+  // invitado: el envío va a quedar pendiente para la próxima vez que
+  // use el formulario, y mientras tanto ya ve su respuesta guardada.
+  try {
+    await clienteDB.from('respuestas_rsvp').insert({
+      invitacion_id: id,
+      nombre: datos.nombre,
+      asiste: datos.asiste,
+      cantidad: datos.cantidad,
+      mensaje: datos.mensaje,
+    });
+  } catch (error) {
+    console.error('No se pudo guardar la respuesta en Supabase:', error);
+  }
+}
+
+function renderFormularioRSVP() {
+  const cont = document.getElementById('rsvp-form-estado');
+  const previo = obtenerRSVPGuardado(ID_INVITACION);
+
+  if (previo) {
+    cont.innerHTML = `
+      <p style="margin:0 0 8px;font-size:15px;">
+        ${previo.asiste ? '✅ Confirmaste tu asistencia' : '📋 Avisaste que no podés ir'}${previo.asiste ? ' — ' + previo.cantidad + (previo.cantidad === 1 ? ' persona' : ' personas') : ''}
+      </p>
+      <p style="margin:0 0 12px;font-size:13px;color:#cccccc;">${previo.nombre}${previo.mensaje ? ' · "' + previo.mensaje + '"' : ''}</p>
+      <button id="rsvp-editar" style="background:none;border:1px solid #666;color:#ccc;padding:8px 14px;border-radius:8px;font-size:13px;">Editar mi respuesta</button>
+    `;
+    document.getElementById('rsvp-editar').onclick = mostrarFormulario;
+    return;
+  }
+  mostrarFormulario();
+
+  function mostrarFormulario() {
+    cont.innerHTML = `
+      <p style="margin:0 0 10px;font-weight:bold;">¿Vas a venir?</p>
+      <input id="rsvp-nombre" placeholder="Tu nombre" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:none;margin-bottom:8px;font-size:15px;font-family:sans-serif;">
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <button data-asiste="si" class="rsvp-opcion" style="flex:1;padding:10px;border-radius:8px;border:2px solid #51cf66;background:none;color:#fff;font-size:14px;">Sí, voy</button>
+        <button data-asiste="no" class="rsvp-opcion" style="flex:1;padding:10px;border-radius:8px;border:2px solid #ff6b6b;background:none;color:#fff;font-size:14px;">No puedo</button>
+      </div>
+      <div id="rsvp-cantidad-cont" style="display:none;margin-bottom:8px;">
+        <label style="font-size:13px;color:#ccc;">¿Cuántos van (contándote)?</label>
+        <input id="rsvp-cantidad" type="number" min="1" max="10" value="1" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:none;margin-top:4px;font-size:15px;">
+      </div>
+      <textarea id="rsvp-mensaje" placeholder="Mensaje (opcional)" rows="2" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:none;margin-bottom:10px;font-size:14px;font-family:sans-serif;"></textarea>
+      <button id="rsvp-enviar" disabled style="width:100%;padding:12px;border-radius:8px;border:none;background:#666;color:#fff;font-size:15px;font-weight:bold;">Confirmar</button>
+      <p id="rsvp-error" style="color:#ff8787;font-size:13px;margin:6px 0 0;"></p>
+    `;
+
+    let asisteElegido = null;
+    const botones = cont.querySelectorAll('.rsvp-opcion');
+    const nombreInput = document.getElementById('rsvp-nombre');
+    const btnEnviar = document.getElementById('rsvp-enviar');
+
+    function actualizarBotonEnviar() {
+      const ok = nombreInput.value.trim().length > 0 && asisteElegido !== null;
+      btnEnviar.disabled = !ok;
+      btnEnviar.style.background = ok ? '#ffd93d' : '#666';
+      btnEnviar.style.color = ok ? '#1a1a2e' : '#fff';
+    }
+
+    botones.forEach(b => b.onclick = () => {
+      asisteElegido = b.dataset.asiste === 'si';
+      botones.forEach(x => x.style.opacity = '0.4');
+      b.style.opacity = '1';
+      document.getElementById('rsvp-cantidad-cont').style.display = asisteElegido ? 'block' : 'none';
+      actualizarBotonEnviar();
+    });
+    nombreInput.oninput = actualizarBotonEnviar;
+
+    btnEnviar.onclick = async () => {
+      const nombre = nombreInput.value.trim();
+      if (!nombre || asisteElegido === null) {
+        document.getElementById('rsvp-error').textContent = 'Completá tu nombre y si vas a venir.';
+        return;
+      }
+      const cantidadInput = parseInt(document.getElementById('rsvp-cantidad').value, 10) || 1;
+      const cantidad = asisteElegido ? Math.max(1, Math.min(10, cantidadInput)) : 0;
+      const mensaje = document.getElementById('rsvp-mensaje').value.trim();
+      btnEnviar.disabled = true;
+      btnEnviar.textContent = 'Enviando...';
+      await guardarRSVP(ID_INVITACION, { nombre, asiste: asisteElegido, cantidad, mensaje, fecha: new Date().toISOString() });
+      renderFormularioRSVP();
+    };
+  }
+}
+
+function mostrarUIInvitacion() {
+  document.getElementById('rsvp-card').style.display = 'block';
+  document.getElementById('volver-jugar').style.display = 'block';
+  renderFormularioRSVP();
+}
+
+function ocultarUIInvitacion() {
+  document.getElementById('rsvp-card').style.display = 'none';
+  document.getElementById('volver-jugar').style.display = 'none';
+}
 
 const VELOCIDAD_SCROLL = 220;          // píxeles por segundo
 const OBJETOS_PARA_GANAR = 10;         // con juntar esta cantidad, se termina el nivel
@@ -248,10 +394,13 @@ class EscenaInvitacion extends Phaser.Scene {
     const ANCHO = this.scale.width;
     const ALTO = this.scale.height;
 
+    // Los datos del evento ocupan solo la parte de arriba de la pantalla;
+    // la parte de abajo queda libre para la tarjeta de RSVP (HTML), que
+    // se muestra por encima de esto.
     this.add.rectangle(0, 0, ANCHO, ALTO, 0x1a1a2e).setOrigin(0, 0);
-    this.add.text(ANCHO / 2, ALTO * 0.15, '¡Festejemos juntos!', { fontSize: '26px', color: '#ffd93d' }).setOrigin(0.5);
-    this.add.text(ANCHO / 2, ALTO * 0.15 + 50, INVITACION.nombres, { fontSize: '34px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
-    this.add.text(ANCHO / 2, ALTO * 0.15 + 90, INVITACION.tipoEvento, { fontSize: '16px', color: '#cccccc' }).setOrigin(0.5);
+    this.add.text(ANCHO / 2, ALTO * 0.08, '¡Festejemos juntos!', { fontSize: '22px', color: '#ffd93d' }).setOrigin(0.5);
+    this.add.text(ANCHO / 2, ALTO * 0.08 + 38, INVITACION.nombres, { fontSize: '28px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+    this.add.text(ANCHO / 2, ALTO * 0.08 + 72, INVITACION.tipoEvento, { fontSize: '14px', color: '#cccccc' }).setOrigin(0.5);
 
     const datos = [
       '📅 ' + INVITACION.fecha + ' — ' + INVITACION.hora,
@@ -259,12 +408,16 @@ class EscenaInvitacion extends Phaser.Scene {
       INVITACION.direccion,
     ];
     datos.forEach((linea, i) => {
-      this.add.text(ANCHO / 2, ALTO * 0.15 + 150 + i * 28, linea, { fontSize: '16px', color: '#ffffff' }).setOrigin(0.5);
+      this.add.text(ANCHO / 2, ALTO * 0.08 + 112 + i * 22, linea, { fontSize: '13px', color: '#ffffff' }).setOrigin(0.5);
     });
 
-    const boton = this.add.rectangle(ANCHO / 2, ALTO - 60, 220, 44, 0xff6b6b).setInteractive();
-    this.add.text(ANCHO / 2, ALTO - 60, 'Jugar de nuevo', { fontSize: '16px', color: '#ffffff' }).setOrigin(0.5);
-    boton.on('pointerdown', () => this.scene.start('EscenaJuego'));
+    // Mostramos la tarjeta de RSVP (HTML) y conectamos el link para
+    // volver a jugar, que también vive ahí afuera del canvas.
+    mostrarUIInvitacion();
+    document.getElementById('volver-jugar').onclick = () => {
+      ocultarUIInvitacion();
+      this.scene.start('EscenaJuego');
+    };
   }
 }
 
