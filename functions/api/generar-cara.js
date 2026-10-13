@@ -5,13 +5,13 @@
 // riesgo de que alguien la vea mirando el código de la página.
 //
 // Qué hace: recibe una foto (enviada desde una página con un formulario),
-// le pide a OpenAI que la convierta en un personaje estilo doodle (cabeza
-// y torso, sin piernas), y devuelve esa imagen nueva.
+// le pide a OpenAI que la convierta en un retrato tipo dibujo animado, y
+// devuelve esa imagen nueva.
 //
 // Esta es una PRUEBA AISLADA: todavía no está conectada al juego. La idea
-// es primero confirmar que el estilo y el recorte salen bien, antes de
-// meterla dentro del flujo real (donde se le van a agregar piernas
-// animadas por código, no generadas por la IA).
+// es primero confirmar que esta conexión con OpenAI funciona bien sola,
+// antes de meterla dentro del flujo real (donde se pegaría la cara sobre
+// el cuerpo del personaje).
 // ======================================================
 
 export async function onRequestPost(context) {
@@ -44,15 +44,22 @@ export async function onRequestPost(context) {
       'prompt',
       'Generá un personaje estilo "doodle" minimalista y tierno (como un sticker de boda cute), ' +
       'de cuerpo entero PERO CORTADO A LA ALTURA DE LA CADERA: incluí cabeza, torso y brazos, ' +
-      'SIN piernas ni cadera (el dibujo termina en una línea limpia horizontal a la altura de ' +
-      'donde empezarían las piernas). Cabeza grande y redonda en proporción al torso, que es ' +
-      'chico y simple. Pelo como una forma sólida de color plano, SIN mechones ni textura. Ojos ' +
-      'simples (puntitos o líneas curvas), boca como una línea curva simple, mejillas con un ' +
-      'toque de color rosado. Brazos finos tipo línea. TODOS los colores sólidos y lisos, SIN ' +
-      'sombreados, SIN degradados, sin textura de ningún tipo. Inspirate en el pelo, tono de ' +
-      'piel y vibra general de la foto, pero el resultado final tiene que verse como un dibujo ' +
-      'plano, no como una ilustración realista. De pie, mirando de frente. Fondo completamente ' +
-      'transparente, nada alrededor del personaje.'
+      'SIN piernas ni cadera. MUY IMPORTANTE sobre el corte de abajo: el torso tiene que terminar ' +
+      'en una línea RECTA y HORIZONTAL perfecta, como si el dibujo hubiera sido cortado con una ' +
+      'tijera justo a la altura de la cadera. NO dibujes el torso como una forma redondeada ni en ' +
+      'forma de panza u óvalo que se achica hacia abajo: el contorno izquierdo y derecho del torso ' +
+      'tienen que bajar derechos (verticales) y terminar en esa línea horizontal, sin curvarse hacia ' +
+      'adentro. NO agregues ninguna línea, piso, sombra ni elemento debajo del corte: después de esa ' +
+      'línea horizontal no va nada más, todo transparente. MUY IMPORTANTE sobre los brazos: los brazos ' +
+      'tienen que estar CAÍDOS Y SUELTOS a los costados del cuerpo, ligeramente separados del torso, ' +
+      'como si el personaje estuviera parado relajado — NUNCA cruzados, NUNCA apoyados en la cintura, ' +
+      'NUNCA juntos adelante. Cabeza grande y redonda en proporción al torso, que es chico y simple. ' +
+      'Pelo como una forma sólida de color plano, SIN mechones ni textura. Ojos simples (puntitos o ' +
+      'líneas curvas), boca como una línea curva simple, mejillas con un toque de color rosado. Brazos ' +
+      'finos tipo línea. TODOS los colores sólidos y lisos, SIN sombreados, SIN degradados, sin textura ' +
+      'de ningún tipo. Inspirate en el pelo, tono de piel y vibra general de la foto, pero el resultado ' +
+      'final tiene que verse como un dibujo plano, no como una ilustración realista. De pie, mirando de ' +
+      'frente, simétrico. Fondo completamente transparente, nada alrededor del personaje.'
     );
     formParaOpenAI.append('size', '1024x1024');
     formParaOpenAI.append('quality', 'low'); // la más económica: para una cara chica no hace falta más resolución
