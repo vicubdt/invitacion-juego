@@ -54,6 +54,7 @@ const CATALOGO_DEMO = {
     dressCode: "Elegante sport",
     regaloTexto: "Si querés hacernos un regalo, preferimos una ayuda para la luna de miel:",
     regaloDatos: "Alias: vickiyjuan.boda",
+    incluyeJuego: true,
   },
   "cumple-juan": {
     nombres: "Juan",
@@ -67,6 +68,21 @@ const CATALOGO_DEMO = {
     dressCode: "Casual",
     regaloTexto: "No hace falta, pero si querés hacerme un regalo:",
     regaloDatos: "Alias: juan.cumple33",
+    incluyeJuego: true,
+  },
+  "solo-tarjeta": {
+    nombres: "Marina",
+    tipoEvento: "Cumpleaños",
+    fecha: "5 de diciembre de 2026",
+    hora: "20:00 hs",
+    lugar: "Casa de Marina",
+    direccion: "Av. Scalabrini Ortiz 800, CABA",
+    objeto: "corazon",
+    fechaHoraIso: "2026-12-05T20:00:00",
+    dressCode: "Como vengas",
+    regaloTexto: "Con tu presencia alcanza, pero si querés sumarte a un regalo grupal:",
+    regaloDatos: "Alias: marina.cumple30",
+    incluyeJuego: false,
   },
 };
 
@@ -91,6 +107,7 @@ function normalizarInvitacion(fila) {
     dressCode: fila.dress_code || null,
     regaloTexto: fila.regalo_texto || null,
     regaloDatos: fila.regalo_datos || null,
+    incluyeJuego: fila.incluye_juego !== false,
   };
 }
 
@@ -482,7 +499,9 @@ async function construirTarjetaInvitacion() {
 
 async function mostrarUIInvitacion() {
   document.getElementById('rsvp-card').style.display = 'block';
-  document.getElementById('volver-jugar').style.display = 'block';
+  // El link para "jugar de nuevo" solo tiene sentido si esta invitación
+  // incluye el juego — en la que es solo tarjeta, no hay nada a lo que volver.
+  document.getElementById('volver-jugar').style.display = INVITACION.incluyeJuego ? 'block' : 'none';
   await construirTarjetaInvitacion();
   renderFormularioRSVP();
 }
@@ -685,13 +704,15 @@ class EscenaInvitacion extends Phaser.Scene {
       this.add.text(ANCHO / 2, ALTO * 0.08 + 112 + i * 22, linea, { fontSize: '13px', color: '#ffffff' }).setOrigin(0.5);
     });
 
-    // Mostramos la tarjeta de RSVP (HTML) y conectamos el link para
-    // volver a jugar, que también vive ahí afuera del canvas.
+    // Mostramos la tarjeta de RSVP (HTML) y, si esta invitación incluye
+    // juego, conectamos el link para volver a jugar.
     mostrarUIInvitacion();
-    document.getElementById('volver-jugar').onclick = () => {
-      ocultarUIInvitacion();
-      this.scene.start('EscenaJuego');
-    };
+    if (INVITACION.incluyeJuego) {
+      document.getElementById('volver-jugar').onclick = () => {
+        ocultarUIInvitacion();
+        this.scene.start('EscenaJuego');
+      };
+    }
   }
 }
 
@@ -711,9 +732,18 @@ async function iniciar() {
   COLOR_OBJETO = COLOR_OBJETOS[INVITACION.objeto] || 0xffd93d;
   SIMBOLO_FINAL = EMOJI_FINAL[INVITACION.tipoEvento] || '🎉';
 
-  SONIDO_ACTIVADO = await pedirPreferenciaSonido();
+  // La música solo existe durante el juego, así que si esta invitación no
+  // lo incluye, ni siquiera preguntamos por el sonido — se va directo a
+  // la tarjeta, con menos pasos de por medio para el invitado.
+  if (INVITACION.incluyeJuego) {
+    SONIDO_ACTIVADO = await pedirPreferenciaSonido();
+  }
 
   contenedor.innerHTML = '';
+
+  // Si no incluye juego, directamente no registramos esa escena: no hay
+  // forma de llegar a ella ni por accidente.
+  const escenas = INVITACION.incluyeJuego ? [EscenaJuego, EscenaInvitacion] : [EscenaInvitacion];
 
   new Phaser.Game({
     type: Phaser.AUTO,
@@ -729,7 +759,7 @@ async function iniciar() {
       default: 'arcade',
       arcade: { gravity: { y: 1200 }, debug: false },
     },
-    scene: [EscenaJuego, EscenaInvitacion],
+    scene: escenas,
   });
 }
 
