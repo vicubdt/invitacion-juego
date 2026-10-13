@@ -20,18 +20,67 @@
 <script>
 // ======================================================
 // CONFIGURACIÓN DE LA INVITACIÓN
-// Más adelante esto va a venir de la base de datos, según el
-// pedido del cliente. Por ahora está escrito a mano para poder
-// probar el motor del juego sin depender de nada más.
+//
+// Esto es lo importante de este cambio: el juego YA NO TIENE los datos
+// de la invitación escritos adentro. Los busca según el "id" que viene
+// en el link (por ejemplo, ?id=cumple-juan). Hoy esa búsqueda es en una
+// lista de ejemplos acá abajo; el día que conectemos la base de datos
+// real (Supabase), lo único que cambia es DE DÓNDE viene ese dato — el
+// resto del motor del juego no se toca.
 // ======================================================
-const INVITACION = {
-  nombres: "Vicki & Juan",
-  tipoEvento: "Casamiento",
-  fecha: "14 de marzo de 2027",
-  hora: "19:30 hs",
-  lugar: "Salón Jacarandá",
-  direccion: "Av. Libertador 1234, CABA",
+const CATALOGO_DEMO = {
+  demo: {
+    nombres: "Vicki & Juan",
+    tipoEvento: "Casamiento",
+    fecha: "14 de marzo de 2027",
+    hora: "19:30 hs",
+    lugar: "Salón Jacarandá",
+    direccion: "Av. Libertador 1234, CABA",
+    objeto: "frutilla",
+  },
+  "cumple-juan": {
+    nombres: "Juan",
+    tipoEvento: "Cumpleaños",
+    fecha: "20 de noviembre de 2026",
+    hora: "21:00 hs",
+    lugar: "Bar El Rincón",
+    direccion: "Av. Corrientes 2200, CABA",
+    objeto: "estrella",
+  },
 };
+
+function obtenerIdDeLaUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('id') || 'demo';
+}
+
+function cargarInvitacion(id) {
+  // 1) ¿Está en la lista de ejemplos? (mañana, esto sería "¿está en la base de datos?")
+  if (CATALOGO_DEMO[id]) {
+    // La guardamos también en el celu, por si el día de mañana se corta la
+    // conexión justo cuando alguien recarga la página a mitad de partida.
+    localStorage.setItem('invitacion_' + id, JSON.stringify(CATALOGO_DEMO[id]));
+    return CATALOGO_DEMO[id];
+  }
+  // 2) Si no, ¿la teníamos guardada de una visita anterior?
+  const guardada = localStorage.getItem('invitacion_' + id);
+  if (guardada) return JSON.parse(guardada);
+  // 3) Si no hay nada de nada, mostramos la de ejemplo para no romper la demo.
+  return CATALOGO_DEMO.demo;
+}
+
+const ID_INVITACION = obtenerIdDeLaUrl();
+const INVITACION = cargarInvitacion(ID_INVITACION);
+
+// El objeto a juntar y el símbolo final cambian según la invitación, sin
+// tocar el motor: están armados sobre un catálogo chico reutilizable.
+const EMOJI_OBJETOS = { frutilla: '🍓', estrella: '⭐', corazon: '❤️', mate: '🧉' };
+const COLOR_OBJETOS = { frutilla: 0xffd93d, estrella: 0xffd93d, corazon: 0xff6b6b, mate: 0x8fbc5a };
+const EMOJI_OBJETO = EMOJI_OBJETOS[INVITACION.objeto] || '🍓';
+const COLOR_OBJETO = COLOR_OBJETOS[INVITACION.objeto] || 0xffd93d;
+
+const EMOJI_FINAL = { 'Casamiento': '💍', 'Cumpleaños': '🎂', 'Quince años': '👑' };
+const SIMBOLO_FINAL = EMOJI_FINAL[INVITACION.tipoEvento] || '🎉';
 
 const VELOCIDAD_SCROLL = 220;          // píxeles por segundo
 const OBJETOS_PARA_GANAR = 10;         // con juntar esta cantidad, se termina el nivel
@@ -54,10 +103,15 @@ class EscenaJuego extends Phaser.Scene {
     const ANCHO = this.scale.width;
     const ALTO = this.scale.height;
     this.ANCHO = ANCHO;
-    this.ALTO = ALTO;
+
+    // Reservamos una franja abajo solo para los controles, separada del
+    // área donde pasan los obstáculos y las frutillas (para que el botón
+    // de saltar no quede "pisando" el juego, como pasaba antes).
+    const CONTROL_ALTO = 110;
+    const ALTO_JUEGO = ALTO - CONTROL_ALTO;
 
     // --- Personaje (por ahora, un rectángulo simple con un ojo) ---
-    this.personaje = this.add.container(120, ALTO - 100);
+    this.personaje = this.add.container(120, ALTO_JUEGO - 100);
     this.cuerpo = this.add.rectangle(0, 0, 40, 56, 0xff6b6b, 1).setStrokeStyle(2, 0x1a1a2e);
     const ojo = this.add.circle(10, -10, 4, 0x1a1a2e);
     this.personaje.add([this.cuerpo, ojo]);
@@ -73,8 +127,8 @@ class EscenaJuego extends Phaser.Scene {
     this.contador = 0;
     let x = 400;
     for (let i = 0; i < OBJETOS_TOTALES; i++) {
-      const y = ALTO - Phaser.Math.Between(90, 160);
-      const objeto = this.add.circle(x, y, 12, 0xffd93d).setStrokeStyle(2, 0xc9a200);
+      const y = ALTO_JUEGO - Phaser.Math.Between(90, 160);
+      const objeto = this.add.circle(x, y, 12, COLOR_OBJETO).setStrokeStyle(2, 0xc9a200);
       this.physics.add.existing(objeto, true);
       this.objetos.add(objeto);
       x += Phaser.Math.Between(ESPACIADO_MIN, ESPACIADO_MAX);
@@ -84,14 +138,14 @@ class EscenaJuego extends Phaser.Scene {
     this.distanciaNivel = DISTANCIA_NIVEL;
 
     // --- Piso (ya con el largo del nivel calculado) ---
-    this.piso = this.add.rectangle(0, ALTO - 40, DISTANCIA_NIVEL + ANCHO * 2, 20, 0x4a3f6b).setOrigin(0, 0);
+    this.piso = this.add.rectangle(0, ALTO_JUEGO - 40, DISTANCIA_NIVEL + ANCHO * 2, 20, 0x4a3f6b).setOrigin(0, 0);
     this.physics.add.existing(this.piso, true); // true = estático
     this.physics.add.collider(this.personaje, this.piso);
 
     // --- Obstáculos: NO terminan la partida, solo hacen tropezar ---
     this.obstaculos = this.physics.add.staticGroup();
     for (let ox = 600; ox < DISTANCIA_NIVEL - 250; ox += Phaser.Math.Between(300, 420)) {
-      const obstaculo = this.add.rectangle(ox, ALTO - 64, 30, 48, 0x6c5ce7).setStrokeStyle(2, 0x1a1a2e);
+      const obstaculo = this.add.rectangle(ox, ALTO_JUEGO - 64, 30, 48, 0x6c5ce7).setStrokeStyle(2, 0x1a1a2e);
       this.physics.add.existing(obstaculo, true);
       this.obstaculos.add(obstaculo);
     }
@@ -99,8 +153,8 @@ class EscenaJuego extends Phaser.Scene {
 
     // --- Meta visual al final del todo: es una red de seguridad, no el
     //     disparador principal (ese es juntar las 10 frutillas) ---
-    this.meta = this.add.rectangle(DISTANCIA_NIVEL, ALTO - 120, 50, 160, 0x51cf66, 0.3).setStrokeStyle(3, 0x2f9e44);
-    this.add.text(DISTANCIA_NIVEL, ALTO - 220, '🎉', { fontSize: '48px' }).setOrigin(0.5);
+    this.meta = this.add.rectangle(DISTANCIA_NIVEL, ALTO_JUEGO - 120, 50, 160, 0x51cf66, 0.3).setStrokeStyle(3, 0x2f9e44);
+    this.add.text(DISTANCIA_NIVEL, ALTO_JUEGO - 220, SIMBOLO_FINAL, { fontSize: '48px' }).setOrigin(0.5);
     this.physics.add.existing(this.meta, true);
     this.physics.add.overlap(this.personaje, this.meta, this.llegarAMeta, null, this);
 
@@ -111,11 +165,12 @@ class EscenaJuego extends Phaser.Scene {
     this.cameras.main.setFollowOffset(-ANCHO * 0.25, 0); // deja ver un poco más de lo que viene
 
     // --- Textos fijos en pantalla (no se mueven con la cámara) ---
-    this.textoContador = this.add.text(20, 16, '🍓 0 / ' + OBJETOS_PARA_GANAR, { fontSize: '24px', color: '#ffffff' }).setScrollFactor(0);
+    this.textoContador = this.add.text(20, 16, EMOJI_OBJETO + ' 0 / ' + OBJETOS_PARA_GANAR, { fontSize: '24px', color: '#ffffff' }).setScrollFactor(0);
 
-    // --- Botón de saltar: funciona con click, touch y barra espaciadora ---
-    const boton = this.add.circle(ANCHO - 70, ALTO - 70, 46, 0xffffff, 0.25).setScrollFactor(0).setStrokeStyle(3, 0xffffff).setInteractive();
-    this.add.text(ANCHO - 70, ALTO - 70, 'SALTAR', { fontSize: '14px', color: '#ffffff' }).setOrigin(0.5).setScrollFactor(0);
+    // --- Franja de controles, separada del área donde pasa el juego ---
+    this.add.rectangle(0, ALTO_JUEGO, ANCHO, CONTROL_ALTO, 0x12101c, 0.9).setOrigin(0, 0).setScrollFactor(0);
+    const boton = this.add.circle(ANCHO - 80, ALTO_JUEGO + CONTROL_ALTO / 2, 42, 0xffffff, 0.25).setScrollFactor(0).setStrokeStyle(3, 0xffffff).setInteractive();
+    this.add.text(ANCHO - 80, ALTO_JUEGO + CONTROL_ALTO / 2, 'SALTAR', { fontSize: '14px', color: '#ffffff' }).setOrigin(0.5).setScrollFactor(0);
     boton.on('pointerdown', () => this.saltar());
     this.input.keyboard.on('keydown-SPACE', () => this.saltar());
 
@@ -136,7 +191,7 @@ class EscenaJuego extends Phaser.Scene {
   recolectar(personaje, objeto) {
     objeto.destroy();
     this.contador++;
-    this.textoContador.setText('🍓 ' + this.contador + ' / ' + OBJETOS_PARA_GANAR);
+    this.textoContador.setText(EMOJI_OBJETO + ' ' + this.contador + ' / ' + OBJETOS_PARA_GANAR);
     if (this.contador >= OBJETOS_PARA_GANAR) {
       this.llegarAMeta(); // justo lo que pediste: con las 10, ya se llega a la meta
     }
@@ -159,7 +214,15 @@ class EscenaJuego extends Phaser.Scene {
     this.gano = true;
     this.personaje.body.setVelocity(0, 0);
     this.cameras.main.flash(400, 255, 255, 255);
-    this.time.delayedCall(500, () => this.irALaInvitacion());
+
+    // El festejo se muestra siempre en el centro de la pantalla, sin
+    // importar si ganaste juntando las 10 o llegando físicamente al
+    // cartel del final (así nunca te lo perdés).
+    const simbolo = this.add.text(this.scale.width / 2, this.scale.height / 2, SIMBOLO_FINAL, { fontSize: '72px' })
+      .setOrigin(0.5).setScrollFactor(0).setScale(0.3);
+    this.tweens.add({ targets: simbolo, scale: 1.2, duration: 400, ease: 'Back.Out' });
+
+    this.time.delayedCall(700, () => this.irALaInvitacion());
   }
 
   irALaInvitacion() {
