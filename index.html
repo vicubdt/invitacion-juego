@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Invitación Juego - Prototipo</title>
+<style>
+  html, body { margin:0; padding:0; background:#1a1a2e; height:100%; overflow:hidden; }
+  #game-container { display:flex; align-items:center; justify-content:center; width:100vw; height:100vh; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+</head>
+<body>
+<div id="game-container"></div>
+<script>
+// ======================================================
+// CONFIGURACIÓN DE LA INVITACIÓN
+// Más adelante esto va a venir de la base de datos, según el
+// pedido del cliente. Por ahora está escrito a mano para poder
+// probar el motor del juego sin depender de nada más.
+// ======================================================
+const INVITACION = {
+  nombres: "Vicki & Juan",
+  tipoEvento: "Casamiento",
+  fecha: "14 de marzo de 2027",
+  hora: "19:30 hs",
+  lugar: "Salón Jacarandá",
+  direccion: "Av. Libertador 1234, CABA",
+};
+
+const ANCHO = 800;
+const ALTO = 400;
+const VELOCIDAD_SCROLL = 220;          // píxeles por segundo
+const OBJETOS_PARA_GANAR = 10;         // en cuanto juntás esta cantidad, se termina el nivel
+const ESPACIADO_MIN = 260;             // distancia mínima entre frutillas (bajá/subí esto para acortar/alargar)
+const ESPACIADO_MAX = 340;             // distancia máxima entre frutillas
+
+// ======================================================
+// ESCENA 1: EL JUEGO
+// ======================================================
+class EscenaJuego extends Phaser.Scene {
+  constructor() { super('EscenaJuego'); }
+
+  create() {
+    this.gano = false;
+    this.tropezando = false;
+
+    // --- Personaje (por ahora, un rectángulo simple con un ojo) ---
+    this.personaje = this.add.container(120, ALTO - 100);
+    const cuerpo = this.add.rectangle(0, 0, 40, 56, 0xff6b6b, 1).setStrokeStyle(2, 0x1a1a2e);
+    const ojo = this.add.circle(10, -10, 4, 0x1a1a2e);
+    this.personaje.add([cuerpo, ojo]);
+    this.physics.add.existing(this.personaje);
+    this.personaje.body.setSize(40, 56);
+    this.personaje.body.setCollideWorldBounds(false);
+
+    // --- Objetos coleccionables (frutillas de prueba) ---
+    // El largo del recorrido ya no es un tiempo fijo: se calcula solo, a
+    // partir de dónde cae la última de las OBJETOS_PARA_GANAR frutillas.
+    this.objetos = this.physics.add.staticGroup();
+    this.contador = 0;
+    let x = 400;
+    for (let i = 0; i < OBJETOS_PARA_GANAR; i++) {
+      const y = ALTO - Phaser.Math.Between(90, 160);
+      const objeto = this.add.circle(x, y, 12, 0xffd93d).setStrokeStyle(2, 0xc9a200);
+      this.physics.add.existing(objeto, true);
+      this.objetos.add(objeto);
+      x += Phaser.Math.Between(ESPACIADO_MIN, ESPACIADO_MAX);
+    }
+    this.physics.add.overlap(this.personaje, this.objetos, this.recolectar, null, this);
+    const DISTANCIA_NIVEL = x + 350; // un poco de pista libre después de la última frutilla
+    this.distanciaNivel = DISTANCIA_NIVEL;
+
+    // --- Piso (ya con el largo del nivel calculado) ---
+    this.piso = this.add.rectangle(0, ALTO - 40, DISTANCIA_NIVEL + ANCHO * 2, 20, 0x4a3f6b).setOrigin(0, 0);
+    this.physics.add.existing(this.piso, true); // true = estático
+    this.physics.add.collider(this.personaje, this.piso);
+
+    // --- Obstáculos: NO terminan la partida, solo hacen tropezar ---
+    this.obstaculos = this.physics.add.staticGroup();
+    for (let ox = 600; ox < DISTANCIA_NIVEL - 250; ox += Phaser.Math.Between(300, 420)) {
+      const obstaculo = this.add.rectangle(ox, ALTO - 64, 30, 48, 0x6c5ce7).setStrokeStyle(2, 0x1a1a2e);
+      this.physics.add.existing(obstaculo, true);
+      this.obstaculos.add(obstaculo);
+    }
+    this.physics.add.overlap(this.personaje, this.obstaculos, this.tropezar, null, this);
+
+    // --- Meta: red de seguridad por si llegás sin juntar las 10 ---
+    this.meta = this.add.rectangle(DISTANCIA_NIVEL, ALTO - 120, 50, 160, 0x51cf66, 0.3).setStrokeStyle(3, 0x2f9e44);
+    this.add.text(DISTANCIA_NIVEL, ALTO - 220, '🎉', { fontSize: '48px' }).setOrigin(0.5);
+    this.physics.add.existing(this.meta, true);
+    this.physics.add.overlap(this.personaje, this.meta, this.llegarAMeta, null, this);
+
+    // --- Cámara que sigue al personaje ---
+    this.cameras.main.setBounds(0, 0, DISTANCIA_NIVEL + ANCHO, ALTO);
+    this.physics.world.setBounds(0, 0, DISTANCIA_NIVEL + ANCHO, ALTO);
+    this.cameras.main.startFollow(this.personaje, true, 1, 0);
+    this.cameras.main.setFollowOffset(-200, 0);
+
+    // --- Textos fijos en pantalla (no se mueven con la cámara) ---
+    this.textoContador = this.add.text(20, 16, '🍓 0 / ' + OBJETOS_PARA_GANAR, { fontSize: '24px', color: '#ffffff' }).setScrollFactor(0);
+
+    // --- Botón de saltar: funciona con click, touch y barra espaciadora ---
+    const boton = this.add.circle(ANCHO - 70, ALTO - 70, 46, 0xffffff, 0.25).setScrollFactor(0).setStrokeStyle(3, 0xffffff).setInteractive();
+    this.add.text(ANCHO - 70, ALTO - 70, 'SALTAR', { fontSize: '14px', color: '#ffffff' }).setOrigin(0.5).setScrollFactor(0);
+    boton.on('pointerdown', () => this.saltar());
+    this.input.keyboard.on('keydown-SPACE', () => this.saltar());
+
+    // --- Acceso directo a la invitación, sin jugar (accesibilidad) ---
+    this.add.text(ANCHO - 10, 10, 'Ver invitación sin jugar →', { fontSize: '13px', color: '#cccccc' })
+      .setOrigin(1, 0).setScrollFactor(0).setInteractive()
+      .on('pointerdown', () => this.irALaInvitacion());
+  }
+
+  saltar() {
+    if (this.gano) return;
+    const tocandoPiso = this.personaje.body.blocked.down || this.personaje.body.touching.down;
+    if (tocandoPiso) {
+      this.personaje.body.setVelocityY(-520);
+    }
+  }
+
+  recolectar(personaje, objeto) {
+    objeto.destroy();
+    this.contador++;
+    this.textoContador.setText('🍓 ' + this.contador + ' / ' + OBJETOS_PARA_GANAR);
+    if (this.contador >= OBJETOS_PARA_GANAR) {
+      this.llegarAMeta(); // justo lo que pediste: con las 10, ya se llega a la meta
+    }
+  }
+
+  tropezar() {
+    // No termina la partida: solo un efecto visual breve, para que
+    // se sienta el choque sin frustrar ni detener al invitado.
+    if (this.tropezando) return;
+    this.tropezando = true;
+    this.cameras.main.shake(120, 0.004);
+    this.time.delayedCall(300, () => { this.tropezando = false; });
+  }
+
+  llegarAMeta() {
+    if (this.gano) return;
+    this.gano = true;
+    this.personaje.body.setVelocity(0, 0);
+    this.cameras.main.flash(400, 255, 255, 255);
+    this.time.delayedCall(500, () => this.irALaInvitacion());
+  }
+
+  irALaInvitacion() {
+    this.scene.start('EscenaInvitacion');
+  }
+
+  update() {
+    if (this.gano) return;
+    // El personaje avanza solo; el jugador únicamente controla el salto.
+    this.personaje.body.setVelocityX(VELOCIDAD_SCROLL);
+    if (this.personaje.x > this.distanciaNivel + 40) {
+      this.personaje.x = this.distanciaNivel + 40;
+    }
+  }
+}
+
+// ======================================================
+// ESCENA 2: LA INVITACIÓN
+// ======================================================
+class EscenaInvitacion extends Phaser.Scene {
+  constructor() { super('EscenaInvitacion'); }
+
+  create() {
+    this.add.rectangle(0, 0, ANCHO, ALTO, 0x1a1a2e).setOrigin(0, 0);
+    this.add.text(ANCHO / 2, 50, '¡Festejemos juntos!', { fontSize: '26px', color: '#ffd93d' }).setOrigin(0.5);
+    this.add.text(ANCHO / 2, 110, INVITACION.nombres, { fontSize: '34px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5);
+    this.add.text(ANCHO / 2, 160, INVITACION.tipoEvento, { fontSize: '16px', color: '#cccccc' }).setOrigin(0.5);
+
+    const datos = [
+      '📅 ' + INVITACION.fecha + ' — ' + INVITACION.hora,
+      '📍 ' + INVITACION.lugar,
+      INVITACION.direccion,
+    ];
+    datos.forEach((linea, i) => {
+      this.add.text(ANCHO / 2, 220 + i * 28, linea, { fontSize: '16px', color: '#ffffff' }).setOrigin(0.5);
+    });
+
+    const boton = this.add.rectangle(ANCHO / 2, ALTO - 50, 220, 44, 0xff6b6b).setInteractive();
+    this.add.text(ANCHO / 2, ALTO - 50, 'Jugar de nuevo', { fontSize: '16px', color: '#ffffff' }).setOrigin(0.5);
+    boton.on('pointerdown', () => this.scene.start('EscenaJuego'));
+  }
+}
+
+// ======================================================
+// CONFIGURACIÓN DEL MOTOR (Phaser)
+// ======================================================
+new Phaser.Game({
+  type: Phaser.AUTO,
+  width: ANCHO,
+  height: ALTO,
+  backgroundColor: '#87ceeb',
+  parent: 'game-container',
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+  },
+  physics: {
+    default: 'arcade',
+    arcade: { gravity: { y: 1200 }, debug: false },
+  },
+  scene: [EscenaJuego, EscenaInvitacion],
+});
+</script>
+</body>
+</html>
