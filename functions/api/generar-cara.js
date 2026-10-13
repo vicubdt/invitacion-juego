@@ -42,28 +42,35 @@ export async function onRequestPost(context) {
     formParaOpenAI.append('image', foto, 'foto.png');
     formParaOpenAI.append(
       'prompt',
-      'Generá UNA sola imagen que contenga DOS dibujos del MISMO personaje corriendo, uno al lado ' +
-      'del otro, bien separados por un espacio vacío entre ellos (como dos fotos de una secuencia). ' +
-      'Estilo "doodle" minimalista y tierno (como un sticker de boda cute), TODOS los colores sólidos ' +
-      'y lisos, SIN sombreados, SIN degradados, sin textura de ningún tipo. Cabeza grande y redonda en ' +
-      'proporción al cuerpo, que es chico y simple. Pelo como forma sólida de color plano, SIN mechones. ' +
-      'Ojos simples (puntitos o líneas curvas), boca como línea curva simple, mejillas con un toque de ' +
-      'color rosado. Brazos finos tipo línea, CAÍDOS Y SUELTOS a los costados del cuerpo en las dos ' +
-      'poses (nunca cruzados, nunca en la cintura). Inspirate en el pelo, tono de piel y vibra general ' +
-      'de la foto, pero el resultado tiene que verse como un dibujo plano, no como una ilustración ' +
-      'realista. CUERPO COMPLETO de pies a cabeza en las dos poses (esta vez SÍ con piernas dibujadas, ' +
-      'nada de cortar a la altura de la cadera). ' +
-      'DIBUJO DE LA IZQUIERDA: personaje corriendo de frente a la cámara, con una pierna adelante y ' +
-      'doblada hacia arriba en la rodilla (el pie despegado del piso), y la otra pierna estirada hacia ' +
-      'atrás, también despegada del piso — como en plena zancada. ' +
-      'DIBUJO DE LA DERECHA: el mismo personaje, mismo diseño exacto (mismo pelo, cara, ropa, colores), ' +
-      'pero en el punto medio de la zancada: las dos piernas cerca del centro del cuerpo, ambas rodillas ' +
-      'dobladas, como pasando una al lado de la otra. ' +
-      'Fondo 100% transparente en TODA la imagen (las dos poses), nada alrededor del personaje en ' +
-      'ningún lado.'
+      'Generá UNA sola imagen con DOS dibujos SEPARADOS del mismo personaje, uno al lado del otro, ' +
+      'con un espacio vacío entre ellos. Fondo 100% transparente en TODA la imagen, nada alrededor ' +
+      'de ninguno de los dos dibujos. ' +
+      'DIBUJO A (a la izquierda): Generá un personaje estilo "doodle" minimalista y tierno (como un ' +
+      'sticker de boda cute), de cuerpo entero PERO CORTADO A LA ALTURA DE LA CADERA: incluí cabeza, ' +
+      'torso y brazos, SIN piernas ni cadera. MUY IMPORTANTE sobre el corte de abajo: el torso tiene ' +
+      'que terminar en una línea RECTA y HORIZONTAL perfecta, como si el dibujo hubiera sido cortado ' +
+      'con una tijera justo a la altura de la cadera. NO dibujes el torso como una forma redondeada ' +
+      'ni en forma de panza u óvalo que se achica hacia abajo: el contorno izquierdo y derecho del ' +
+      'torso tienen que bajar derechos (verticales) y terminar en esa línea horizontal, sin curvarse ' +
+      'hacia adentro. NO agregues ninguna línea, piso, sombra ni elemento debajo del corte. MUY ' +
+      'IMPORTANTE sobre los brazos: tienen que estar CAÍDOS Y SUELTOS a los costados del cuerpo, ' +
+      'ligeramente separados del torso — NUNCA cruzados, NUNCA en la cintura. Cabeza grande y redonda ' +
+      'en proporción al torso, que es chico y simple. Pelo como forma sólida de color plano, SIN ' +
+      'mechones. Ojos simples (puntitos o líneas curvas), boca como línea curva simple, mejillas con ' +
+      'un toque de color rosado. Brazos finos tipo línea. TODOS los colores sólidos y lisos, SIN ' +
+      'sombreados, SIN degradados. Inspirate en el pelo, tono de piel y vibra general de la foto, pero ' +
+      'el resultado tiene que verse como un dibujo plano, no realista. De pie, mirando de frente, ' +
+      'simétrico. ' +
+      'DIBUJO B (a la derecha, separado del DIBUJO A): UNA sola pierna completa del mismo personaje, ' +
+      'desde la cadera hasta el pie, PARADA DERECHA Y VERTICAL — quieta, de descanso, SIN doblar, SIN ' +
+      'estar en movimiento ni corriendo. Mismo tono de piel exacto que el DIBUJO A. Forma simple: un ' +
+      'poco más ancha arriba (muslo) y más angosta abajo (pantorrilla), terminando en un pie o calzado ' +
+      'simple y chato, mismo estilo doodle plano, mismos colores sólidos y lisos del DIBUJO A, sin ' +
+      'sombreado. Tiene que verse como UNA sola pieza derecha de arriba a abajo, sin curvas, sin ' +
+      'doblarse, perfectamente vertical.'
     );
-    formParaOpenAI.append('size', '1536x1024'); // apaisada: entran mejor las dos poses una al lado de la otra
-    formParaOpenAI.append('quality', 'medium'); // subo un escalón de calidad: antes el dibujo era chico y solo, ahora son dos dibujos compartiendo el mismo espacio y cada uno necesita más detalle
+    formParaOpenAI.append('size', '1536x1024'); // apaisada: entran mejor los dos dibujos uno al lado del otro
+    formParaOpenAI.append('quality', 'low'); // volvemos a la calidad económica: ya sabemos que acá le alcanza
     formParaOpenAI.append('background', 'transparent'); // esto saca el fondo de color que vimos en la prueba
     formParaOpenAI.append('output_format', 'png'); // hace falta png (o webp) para que la transparencia funcione
     formParaOpenAI.append('n', '1');
