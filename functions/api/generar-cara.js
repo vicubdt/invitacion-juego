@@ -10,8 +10,19 @@
 //
 // Esta es una PRUEBA AISLADA: todavía no está conectada al juego. La idea
 // es primero confirmar que esta conexión con OpenAI funciona bien sola,
-// antes de meterla dentro del flujo real (donde se pegaría la cara sobre
-// el cuerpo del personaje).
+// antes de meterla dentro del flujo real.
+//
+// IMPORTANTE (decisión de producto, no técnica): el personaje en el juego
+// es una imagen ESTÁTICA y QUIETA — avanza y salta como un bloque entero,
+// no tiene piernas animadas ni nada que se mueva por separado. Por eso acá
+// le pedimos a la IA UNA sola pose, de cuerpo completo, parado y quieto.
+//
+// Por ahora este archivo genera siempre el estilo "doodle" (el que ya
+// probamos y aprobamos). Más adelante, cuando sumemos los otros dos
+// estilos (retro tipo plataformero y pixel art), este mismo archivo va a
+// recibir qué estilo eligió el comprador y va a armar un prompt distinto
+// para cada uno — por ahora dejamos esa parte sin construir todavía, para
+// no sumar complejidad antes de tener el estilo base funcionando bien.
 // ======================================================
 
 export async function onRequestPost(context) {
@@ -42,35 +53,23 @@ export async function onRequestPost(context) {
     formParaOpenAI.append('image', foto, 'foto.png');
     formParaOpenAI.append(
       'prompt',
-      'Generá UNA sola imagen con DOS dibujos SEPARADOS del mismo personaje, uno al lado del otro, ' +
-      'con un espacio vacío entre ellos. Fondo 100% transparente en TODA la imagen, nada alrededor ' +
-      'de ninguno de los dos dibujos. ' +
-      'DIBUJO A (a la izquierda): Generá un personaje estilo "doodle" minimalista y tierno (como un ' +
-      'sticker de boda cute), de cuerpo entero PERO CORTADO A LA ALTURA DE LA CADERA: incluí cabeza, ' +
-      'torso y brazos, SIN piernas ni cadera. MUY IMPORTANTE sobre el corte de abajo: el torso tiene ' +
-      'que terminar en una línea RECTA y HORIZONTAL perfecta, como si el dibujo hubiera sido cortado ' +
-      'con una tijera justo a la altura de la cadera. NO dibujes el torso como una forma redondeada ' +
-      'ni en forma de panza u óvalo que se achica hacia abajo: el contorno izquierdo y derecho del ' +
-      'torso tienen que bajar derechos (verticales) y terminar en esa línea horizontal, sin curvarse ' +
-      'hacia adentro. NO agregues ninguna línea, piso, sombra ni elemento debajo del corte. MUY ' +
-      'IMPORTANTE sobre los brazos: tienen que estar CAÍDOS Y SUELTOS a los costados del cuerpo, ' +
-      'ligeramente separados del torso — NUNCA cruzados, NUNCA en la cintura. Cabeza grande y redonda ' +
-      'en proporción al torso, que es chico y simple. Pelo como forma sólida de color plano, SIN ' +
-      'mechones. Ojos simples (puntitos o líneas curvas), boca como línea curva simple, mejillas con ' +
-      'un toque de color rosado. Brazos finos tipo línea. TODOS los colores sólidos y lisos, SIN ' +
-      'sombreados, SIN degradados. Inspirate en el pelo, tono de piel y vibra general de la foto, pero ' +
-      'el resultado tiene que verse como un dibujo plano, no realista. De pie, mirando de frente, ' +
-      'simétrico. ' +
-      'DIBUJO B (a la derecha, separado del DIBUJO A): UNA sola pierna completa del mismo personaje, ' +
-      'desde la cadera hasta el pie, PARADA DERECHA Y VERTICAL — quieta, de descanso, SIN doblar, SIN ' +
-      'estar en movimiento ni corriendo. Mismo tono de piel exacto que el DIBUJO A. Forma simple: un ' +
-      'poco más ancha arriba (muslo) y más angosta abajo (pantorrilla), terminando en un pie o calzado ' +
-      'simple y chato, mismo estilo doodle plano, mismos colores sólidos y lisos del DIBUJO A, sin ' +
-      'sombreado. Tiene que verse como UNA sola pieza derecha de arriba a abajo, sin curvas, sin ' +
-      'doblarse, perfectamente vertical.'
+      'Generá un personaje estilo "doodle" minimalista y tierno (como un sticker de boda cute), de ' +
+      'CUERPO COMPLETO, de pies a cabeza (incluí piernas y pies, no cortes a la altura de la cadera ' +
+      'ni en ningún otro lado). Parado derecho, de pie, mirando de frente, simétrico, en una pose ' +
+      'QUIETA Y NEUTRA — no corriendo, no saltando, no caminando, como una foto de perfil de cuerpo ' +
+      'entero. Cabeza grande y redonda en proporción al cuerpo, que es chico y simple. Pelo como forma ' +
+      'sólida de color plano, SIN mechones ni textura. Ojos simples (puntitos o líneas curvas), boca ' +
+      'como línea curva simple, mejillas con un toque de color rosado. Brazos finos tipo línea, CAÍDOS ' +
+      'Y SUELTOS a los costados del cuerpo, ligeramente separados del torso — NUNCA cruzados, NUNCA en ' +
+      'la cintura. Piernas simples y derechas (sin doblar, sin estar en movimiento), un poco más anchas ' +
+      'arriba y más angostas abajo, terminando en pies o calzado simple y chato. TODOS los colores ' +
+      'sólidos y lisos, SIN sombreados, SIN degradados, sin textura de ningún tipo. Inspirate en el ' +
+      'pelo, tono de piel y vibra general de la foto, pero el resultado tiene que verse como un dibujo ' +
+      'plano, no como una ilustración realista. Fondo completamente transparente, nada alrededor del ' +
+      'personaje.'
     );
-    formParaOpenAI.append('size', '1536x1024'); // apaisada: entran mejor los dos dibujos uno al lado del otro
-    formParaOpenAI.append('quality', 'low'); // volvemos a la calidad económica: ya sabemos que acá le alcanza
+    formParaOpenAI.append('size', '1024x1024');
+    formParaOpenAI.append('quality', 'low'); // la económica: ya sabemos que acá le alcanza para una sola pose
     formParaOpenAI.append('background', 'transparent'); // esto saca el fondo de color que vimos en la prueba
     formParaOpenAI.append('output_format', 'png'); // hace falta png (o webp) para que la transparencia funcione
     formParaOpenAI.append('n', '1');
