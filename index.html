@@ -520,6 +520,8 @@ const OBJETOS_PARA_GANAR = 10;         // con juntar esta cantidad, se termina e
 const OBJETOS_TOTALES = 15;            // hay más de los necesarios: si te perdés alguno, quedan otros para seguir juntando
 const ESPACIADO_MIN = 260;             // distancia mínima entre frutillas
 const ESPACIADO_MAX = 340;             // distancia máxima entre frutillas
+const ANGULO_MAX_PIERNA = Phaser.Math.DegToRad(35); // cuánto se abre cada pierna al caminar
+const VELOCIDAD_ANIMACION_PIERNAS = 0.012; // qué tan rápido se mueven las piernas (más alto = pasos más rápidos)
 
 // ======================================================
 // ESCENA 1: EL JUEGO
@@ -528,11 +530,12 @@ class EscenaJuego extends Phaser.Scene {
   constructor() { super('EscenaJuego'); }
 
   preload() {
-    // PRUEBA: por ahora la cara está fija (la que generamos con IA de
-    // prueba), para ver cómo se ve en el personaje. Más adelante esto va
-    // a venir de la invitación de cada cliente (una imagen distinta por
-    // invitación), no de un archivo fijo como este.
-    this.load.image('caraPersonaje', 'test-cara.png');
+    // PRUEBA: por ahora el personaje es fijo (el que generamos con IA de
+    // prueba: cabeza + torso + brazos, cortado a la altura de la cadera),
+    // para ver cómo se ve combinado con las piernas animadas por código.
+    // Más adelante esto va a venir de la invitación de cada cliente (una
+    // imagen distinta por invitación), no de un archivo fijo como este.
+    this.load.image('caraPersonaje', 'personaje-cabeza.png');
   }
 
   create() {
@@ -551,13 +554,40 @@ class EscenaJuego extends Phaser.Scene {
     const CONTROL_ALTO = 110;
     const ALTO_JUEGO = ALTO - CONTROL_ALTO;
 
-    // --- Personaje: cuerpo simple (por ahora) + cara generada con IA ---
+    // --- Personaje: "muñeco de papel" ---
+    // El contenedor tiene su punto (0,0) en la CADERA del personaje: desde
+    // ahí para arriba va la imagen generada con IA (cabeza + torso + brazos,
+    // ya recortada justo en la cadera), y desde ahí para abajo van las dos
+    // piernas, que son formas simples dibujadas por código (no por la IA).
+    // Cada pierna gira como un péndulo alrededor de ese punto de la cadera
+    // (ver update(), más abajo), simulando el movimiento al correr.
     this.personaje = this.add.container(120, ALTO_JUEGO - 100);
-    this.cuerpo = this.add.rectangle(0, 18, 36, 30, 0xff6b6b, 1).setStrokeStyle(2, 0x1a1a2e); // el "torso"
-    const cara = this.add.image(0, -14, 'caraPersonaje').setDisplaySize(40, 40); // la cabeza
-    this.personaje.add([this.cuerpo, cara]);
+
+    const ALTO_TORSO = 56;
+    const ANCHO_TORSO = Math.round(ALTO_TORSO * 0.6); // misma proporción que la imagen generada
+    const COLOR_PIEL = 0xffdaba; // tono aproximado, sacado de la imagen generada
+    const ANCHO_PIERNA = 11;
+    const ALTO_PIERNA = 30;
+    const SEPARACION_PIERNAS = 7;
+
+    this.piernaIzq = this.add.rectangle(-SEPARACION_PIERNAS, 0, ANCHO_PIERNA, ALTO_PIERNA, COLOR_PIEL)
+      .setStrokeStyle(2, 0x1a1a2e).setOrigin(0.5, 0); // origen arriba = ahí está el "pin" de la cadera
+    this.piernaDer = this.add.rectangle(SEPARACION_PIERNAS, 0, ANCHO_PIERNA, ALTO_PIERNA, COLOR_PIEL)
+      .setStrokeStyle(2, 0x1a1a2e).setOrigin(0.5, 0);
+    this.torso = this.add.image(0, 0, 'caraPersonaje')
+      .setDisplaySize(ANCHO_TORSO, ALTO_TORSO).setOrigin(0.5, 1); // origen abajo = apoya justo en la cadera
+
+    this.personaje.add([this.piernaIzq, this.piernaDer, this.torso]);
+    this.faseCaminata = 0; // usado en update() para mover las piernas
+
     this.physics.add.existing(this.personaje);
-    this.personaje.body.setSize(40, 56);
+    this.personaje.body.setSize(ANCHO_TORSO, ALTO_TORSO + ALTO_PIERNA);
+    // OJO Vicki: este offset es mi primer cálculo a ojo para que la "caja"
+    // invisible de colisión quede más o menos centrada en el dibujo nuevo.
+    // Puede que al jugar lo veas "flotando" un poco arriba del piso, o un
+    // poco hundido. Si ves eso, contámelo y lo ajusto — es normal que la
+    // primera vez no quede perfecto.
+    this.personaje.body.setOffset(0, -ALTO_PIERNA / 2 + 3);
     this.personaje.body.setCollideWorldBounds(false);
 
     // --- Objetos coleccionables (frutillas de prueba) ---
@@ -648,9 +678,9 @@ class EscenaJuego extends Phaser.Scene {
     // para que se note el choque sin frustrar ni detener al invitado.
     if (this.tropezando) return;
     this.tropezando = true;
-    this.cuerpo.setFillStyle(0x999999);
+    this.torso.setTint(0x999999);
     this.time.delayedCall(250, () => {
-      this.cuerpo.setFillStyle(0xff6b6b);
+      this.torso.clearTint();
       this.tropezando = false;
     });
   }
@@ -676,12 +706,28 @@ class EscenaJuego extends Phaser.Scene {
     this.scene.start('EscenaInvitacion');
   }
 
-  update() {
+  update(time, delta) {
     if (this.gano) return;
     // El personaje avanza solo; el jugador únicamente controla el salto.
     // (Ya no hay una "pared" invisible al final: si no llega a juntar las
     // 10, simplemente sigue corriendo en vez de frenarse en seco.)
     this.personaje.body.setVelocityX(VELOCIDAD_SCROLL);
+
+    // --- Piernas animadas ---
+    // Mientras toca el piso: las dos piernas se balancean como un péndulo
+    // (una hacia adelante, la otra hacia atrás, alternando sin parar), como
+    // al caminar o correr. En el aire (saltando): dejan de balancearse y
+    // vuelven suavemente a quedar derechas y juntas.
+    const tocandoPiso = this.personaje.body.blocked.down || this.personaje.body.touching.down;
+    if (tocandoPiso) {
+      this.faseCaminata += delta * VELOCIDAD_ANIMACION_PIERNAS;
+      const angulo = Math.sin(this.faseCaminata) * ANGULO_MAX_PIERNA;
+      this.piernaIzq.rotation = angulo;
+      this.piernaDer.rotation = -angulo;
+    } else {
+      this.piernaIzq.rotation = Phaser.Math.Linear(this.piernaIzq.rotation, 0, 0.25);
+      this.piernaDer.rotation = Phaser.Math.Linear(this.piernaDer.rotation, 0, 0.25);
+    }
   }
 }
 
