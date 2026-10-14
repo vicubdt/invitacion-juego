@@ -164,8 +164,9 @@ const CATALOGO_DEMO = {
     lugar: "Salón Jacarandá",
     direccion: "Av. Libertador 1234, CABA",
     objeto: "corazon",
-    personaje1Url: "personaje-cabeza.png",
-    personaje2Url: "personaje-pareja.png",
+    // Demo: el novio corre, la novia espera en el altar.
+    personaje1Url: "personaje-doodle-2.png",
+    personaje2Url: "personaje-doodle-1.png",
     fechaHoraIso: "2027-03-14T19:30:00",
     dressCode: "Elegante sport",
     regaloTexto: "Si querés hacernos un regalo, preferimos una ayuda para la luna de miel:",
@@ -443,8 +444,8 @@ async function generarQRDataURL(texto) {
 const CONFIG_PLANTILLA = Object.freeze({
   id: 'jardin-boda',
   velocidad: 265,                    // px/segundo
-  longitud: 7950,                   // unos 30 segundos
-  objetosParaObjetivo: 10,          // objetivo amable, no bloquea el final
+  longitud: 7950,                   // referencia heredada, NO determina el final
+  objetosParaObjetivo: 10,          // la meta depende solamente de las flores
   espaciadoColeccionables: 285,     // mucho más frecuentes que en el desierto
   inicioObstaculos: 780,
   espaciadoObstaculos: 535
@@ -646,21 +647,14 @@ class EscenaJuego extends Phaser.Scene {
     this.pareja=this.add.image(-900,this.suelo,texP2).setOrigin(.5,1).setDepth(7);
     dibujarProporcion(this.pareja,this.playerHeight*.99);
     this.objetos=[];
-    for(let x=350,i=0;x<DISTANCIA_NIVEL-330;x+=CONFIG_PLANTILLA.espaciadoColeccionables,i++){
-      const alto=i%4===0?this.playerHeight*.99:this.playerHeight*.52;
-      const sprite=this.add.image(-200,this.suelo-alto,'flor-coleccionable').setDepth(6).setScale(this.W<500?.76:.83);
-      const tomado=x<this.distancia-35;
-      this.objetos.push({x,alto,sprite,tomado});if(tomado)sprite.setVisible(false);
-    }
     this.obstaculos=[];
-    for(let x=CONFIG_PLANTILLA.inicioObstaculos,i=0;x<DISTANCIA_NIVEL-620;x+=CONFIG_PLANTILLA.espaciadoObstaculos+(i%3)*62,i++){
-      const grande=i%3!==1;
-      const height=grande?this.playerHeight*.67:this.playerHeight*.52;
-      const tex=i%2?'maceta-verde':'maceta-rosa';
-      const sprite=this.add.image(-200,this.suelo,tex).setOrigin(.5,1).setDepth(5);
-      sprite.setDisplaySize(height*116/118,height);
-      this.obstaculos.push({x,sprite,height,toco:false});
-    }
+    // Los objetos van apareciendo hasta completar las 10 flores.
+    // No hay un final por tiempo ni por distancia.
+    this.proximaFlor=Math.max(350,this.distancia+300);
+    this.indiceFlor=Math.round((this.proximaFlor-350)/CONFIG_PLANTILLA.espaciadoColeccionables);
+    this.proximoObstaculo=Math.max(CONFIG_PLANTILLA.inicioObstaculos,this.distancia+760);
+    this.indiceObstaculo=0;
+    this.crearSiguientesObjetos();
     this.salto=()=>this.saltar();
     $('jump-btn').onclick=this.salto;
     $('hud-skip').onclick=()=>this.abrirInvitacion();
@@ -673,6 +667,36 @@ class EscenaJuego extends Phaser.Scene {
     if(SONIDO_ACTIVADO&&musicaJuego)musicaJuego.iniciar();
   }
   actualizarContador(){ $('hud-count').innerHTML=`🌸 <strong>${Math.min(this.contador,OBJETOS_PARA_GANAR)} / ${OBJETOS_PARA_GANAR}</strong>` }
+  crearSiguientesObjetos(){
+    const hasta=this.distancia+Math.max(this.W+650,1650);
+    while(this.proximaFlor<hasta){
+      const x=this.proximaFlor,i=this.indiceFlor++;
+      const alto=i%4===0?this.playerHeight*.99:this.playerHeight*.52;
+      const sprite=this.add.image(-200,this.suelo-alto,'flor-coleccionable').setDepth(6).setScale(this.W<500?.76:.83);
+      this.objetos.push({x,alto,sprite,tomado:false});
+      this.proximaFlor+=CONFIG_PLANTILLA.espaciadoColeccionables;
+    }
+    while(this.proximoObstaculo<hasta-200){
+      const x=this.proximoObstaculo,i=this.indiceObstaculo++;
+      const grande=i%3!==1;
+      const height=grande?this.playerHeight*.67:this.playerHeight*.52;
+      const tex=i%2?'maceta-verde':'maceta-rosa';
+      const sprite=this.add.image(-200,this.suelo,tex).setOrigin(.5,1).setDepth(5);
+      sprite.setDisplaySize(height*116/118,height);
+      this.obstaculos.push({x,sprite,height,toco:false});
+      this.proximoObstaculo+=CONFIG_PLANTILLA.espaciadoObstaculos+(i%3)*62;
+    }
+    // Quitamos recursos ya pasados para que el juego siga siendo liviano.
+    const pasado=this.distancia-this.personaX-200;
+    this.objetos=this.objetos.filter(o=>{
+      if(o.x>=pasado)return true;
+      this.tweens.killTweensOf(o.sprite);o.sprite.destroy();return false;
+    });
+    this.obstaculos=this.obstaculos.filter(o=>{
+      if(o.x>=pasado)return true;
+      o.sprite.destroy();return false;
+    });
+  }
   saltar(){
     if(this.terminado||this.reunionActiva||this.alturaSalto>1)return;
     this.velSalto=-Math.max(540,this.playerHeight*4.2);this.alturaSalto=2;
@@ -680,12 +704,12 @@ class EscenaJuego extends Phaser.Scene {
     particulas(this,this.personaX-18,this.suelo,4,false);
   }
   recolectar(obj){
+    if(obj.tomado||this.contador>=OBJETOS_PARA_GANAR)return;
     obj.tomado=true;this.contador++;this.actualizarContador();
     particulas(this,this.personaX+10,this.suelo-this.playerHeight*.62-this.alturaSalto,7,false);
     this.tweens.add({targets:obj.sprite,alpha:0,scale:1.3,y:obj.sprite.y-35,duration:260,onComplete:()=>obj.sprite.setVisible(false)});
-    if(this.contador>=OBJETOS_PARA_GANAR){
-      this.time.delayedCall(240,()=>this.encuentro());
-    }
+    // La décima flor activa el encuentro, sin esperar otra barra o distancia.
+    if(this.contador===OBJETOS_PARA_GANAR)this.encuentro();
   }
   chocar(obstaculo){
     obstaculo.toco=true;this.hitCooldown=.85;
@@ -696,10 +720,11 @@ class EscenaJuego extends Phaser.Scene {
     if(this.reunionActiva||this.terminado)return;
     this.reunionActiva=true;
     this.avatar.setAngle(0);this.avatar.y=this.suelo;
+    this.alturaSalto=0;this.velSalto=0;
     $('jump-btn').style.visibility='hidden';
-    const arcoFinalX=Math.min(this.W-120,Math.max(this.W*.72,250));
-    const parejaFinalX=arcoFinalX+44;
-    const avatarFinalX=arcoFinalX-58;
+    const arcoFinalX=Math.min(this.W-125,Math.max(this.W*.63,195));
+    const parejaFinalX=arcoFinalX+37;
+    const avatarFinalX=arcoFinalX-35;
     if(this.arco.x<0||this.arco.x>this.W+160)this.arco.x=this.W+this.arco.displayWidth*.55;
     if(this.pareja.x<0||this.pareja.x>this.W+160)this.pareja.x=this.W+Math.max(90,this.pareja.displayWidth*.8);
     const mid=(avatarFinalX+parejaFinalX)/2;
@@ -722,7 +747,8 @@ class EscenaJuego extends Phaser.Scene {
   update(_time,delta){
     if(this.terminado||this.reunionActiva)return;
     const dt=Math.min(delta/1000,.045);
-    this.distancia=Math.min(DISTANCIA_NIVEL,this.distancia+VELOCIDAD_SCROLL*dt);
+    this.distancia+=VELOCIDAD_SCROLL*dt;
+    this.crearSiguientesObjetos();
     if(this.alturaSalto>0||this.velSalto!==0){
       this.velSalto+=1780*dt;this.alturaSalto-=this.velSalto*dt;
       if(this.alturaSalto<=0){this.alturaSalto=0;this.velSalto=0;particulas(this,this.personaX-16,this.suelo,2,false)}
@@ -741,16 +767,15 @@ class EscenaJuego extends Phaser.Scene {
       const cy=this.suelo-this.alturaSalto-this.playerHeight*.55;
       if(Math.abs(x-x0)<45&&Math.abs(cy-o.sprite.y)<this.playerHeight*.30+25)this.recolectar(o);
     });
+    if(this.reunionActiva)return;
     this.obstaculos.forEach(o=>{
       const x=x0+o.x-this.distancia;o.sprite.x=x;o.sprite.visible=x>-100&&x<this.W+90;
       if(!o.toco&&this.hitCooldown<=0&&Math.abs(x-x0)<34&&this.alturaSalto<o.height*.58)this.chocar(o);
     });
     this.hitCooldown=Math.max(0,this.hitCooldown-dt);
     // La persona 2 se acerca sólo si todavía no se juntaron las 10 flores.
-    if(this.contador<OBJETOS_PARA_GANAR){
-      const metaX=x0+DISTANCIA_NIVEL-this.distancia+82;
-      this.arco.x=metaX+1;this.pareja.x=metaX+43;
-    }
+    // El encuentro sólo empieza al recolectar las 10 flores.
+    // Arco y pareja permanecen fuera de pantalla durante el recorrido.
   }
 }
 
@@ -842,6 +867,12 @@ async function iniciar(){
   ID_INVITACION=obtenerIdDeLaUrl();
   try{INVITACION=await cargarInvitacion(ID_INVITACION);}
   catch(e){console.warn('Se utilizarán datos de demostración:',e);INVITACION=CATALOGO_DEMO[ID_INVITACION]||CATALOGO_DEMO.demo;}
+  // En la demo del jardín usamos siempre los PNG que ya subiste.
+  // Así evitamos volver a mostrar avatares de pruebas anteriores.
+  if (ID_INVITACION === 'demo') {
+    INVITACION.personaje1Url = 'personaje-doodle-2.png'; // novio que corre
+    INVITACION.personaje2Url = 'personaje-doodle-1.png'; // novia que espera
+  }
   EMOJI_OBJETO=EMOJI_OBJETOS[INVITACION.objeto]||'🌸';
   COLOR_OBJETO=COLOR_OBJETOS[INVITACION.objeto]||0xffd93d;
   SIMBOLO_FINAL=EMOJI_FINAL[INVITACION.tipoEvento]||'🎉';
