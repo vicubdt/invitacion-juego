@@ -2,21 +2,19 @@
 // INVITACIONES-JUEGO — Generador de personajes (LABORATORIO)
 // Archivo: functions/api/generar-cara.js
 //
-// NUEVO FLUJO:
-// - Ya NO recibe un estilo elegido por el usuario.
+// FLUJO ACTUAL:
 // - Recibe 1 foto (cumpleaños) o 2 fotos (casamiento).
-// - Genera automáticamente las 3 opciones:
+// - Genera automáticamente 3 opciones:
 //     1) doodle
 //     2) retro
 //     3) pixel
-// - Devuelve una estructura con "opciones", para que la interfaz
-//   pueda mostrarlas y el usuario elija una.
+// - Devuelve una estructura con "opciones" para que la interfaz
+//   las muestre y el usuario elija una.
 //
-// IMPORTANTE:
-// - Esta sigue siendo una herramienta de prueba.
-// - El botón "Elegir este estilo" todavía NO impacta en el juego final.
-// - Antes de llevarlo a producción hay que sumar autenticación,
-//   persistencia, guardado definitivo, límites de uso y control de costos.
+// AJUSTE ARTÍSTICO DE ESTA VERSIÓN:
+// - Menos parecido exacto a la foto.
+// - Más prioridad al estilo visual.
+// - Doodle y retro deben diferenciarse mucho más entre sí.
 // ===============================================================
 
 const MODELO = 'gpt-image-2.5-flare';
@@ -33,40 +31,52 @@ const ETIQUETA_ESTILO = {
 };
 
 const DESCRIPCION_ESTILO = {
-  doodle: 'Dibujo simple, caricaturizado y simpático.',
-  retro: 'Personaje de videojuego de plataformas clásico.',
+  doodle: 'Dibujo simple, adorable, suave y caricaturizado.',
+  retro: 'Personaje de videojuego clásico, con más presencia visual.',
   pixel: 'Sprite pixelado con píxeles cuadrados visibles.',
 };
 
 const PROMPT_COMUN = `
 OBJETIVO:
 Transformá a la persona de la foto adjunta en UN personaje ORIGINAL para
-un videojuego 2D de invitaciones interactivas. La foto es solo referencia
-de identidad. El resultado debe ser una CARICATURA ILUSTRADA, no un retrato.
+un videojuego 2D de invitaciones interactivas.
 
-MUY IMPORTANTE:
-- NO copies la cara de manera realista.
-- NO hagas una ilustración semirrealista.
-- NO pegues un rostro fotográfico sobre un cuerpo dibujado.
-- REDIBUJÁ el personaje desde cero en el estilo pedido.
-- El resultado debe verse claramente dibujado o diseñado como personaje,
-  no como una foto con filtro.
+IMPORTANTE:
+La foto es solo una REFERENCIA GENERAL. NO busques una copia exacta del
+rostro real. NO hace falta que el personaje sea igual a la persona.
+Lo importante es que conserve rasgos GENERALES y DISTINTIVOS para que
+se sienta identificable, pero siempre priorizando el estilo visual.
 
-IDENTIDAD A CONSERVAR:
-- tono de piel
-- peinado y color de pelo
-- forma general del rostro
-- barba o bigote si existen
-- anteojos si existen
+PRIORIDAD DE ESTA GENERACIÓN:
+1. que el estilo visual sea claro y fuerte
+2. que el personaje sea lindo, vendible y consistente
+3. que conserve rasgos generales reconocibles
+4. NO buscar parecido exacto ni retrato fiel
+
+QUÉ TOMAR DE LA FOTO:
+- tono de piel aproximado
+- color y peinado general del pelo
+- barba o bigote si son notorios
+- anteojos si aparecen
+- vibra general del rostro
 - tipo y color general de la ropa visible
 
-SIMPLIFICACIÓN VISUAL:
-- reducir muchísimo el detalle facial
-- evitar textura de piel, poros, brillos realistas y facciones complejas
-- ojos simplificados, nariz simplificada, boca simplificada
-- pelo como masas o bloques, no pelo por pelo
-- barba como forma simplificada, no pelo por pelo
-- ropa simplificada, con lectura clara
+QUÉ NO HACER:
+- no copiar exactamente la cara real
+- no reproducir facciones de manera precisa
+- no hacer retrato semirrealista
+- no pegar una cara realista sobre un cuerpo dibujado
+- no usar texturas realistas de piel, ojos o pelo
+- no copiar el fondo ni los objetos de la foto
+- no agregar accesorios inventados llamativos
+
+SIMPLIFICACIÓN:
+- resumir los rasgos faciales a una versión caricaturizada
+- usar una interpretación visual clara del personaje
+- pelo simplificado en masas o bloques
+- barba simplificada como forma general si corresponde
+- ropa simplificada pero reconocible
+- mantener solo la esencia visual de la persona
 
 COMPOSICIÓN:
 - mostrar UN SOLO personaje
@@ -74,45 +84,100 @@ COMPOSICIÓN:
 - pose quieta, de pie
 - brazos levemente separados del cuerpo
 - piernas y pies bien visibles
-- postura frontal o tres cuartos suave
 - figura centrada
 - sin fondo, sin piso, sin escenario, sin texto, sin objetos adicionales
 - fondo REALMENTE transparente
 
 CALIDAD:
+- personaje prolijo
 - silueta clara para verse bien en celular
-- personaje consistente y prolijo
-- sin dedos extra, sin extremidades incorrectas, sin deformaciones
-- debe verse como un personaje vendible y de calidad
+- anatomía correcta dentro del estilo
+- sin extremidades extra, sin dedos de más, sin deformaciones
+- resultado atractivo, comercial y consistente
 `;
 
 const PROMPTS_ESTILO = {
   doodle: `
 ESTILO OBLIGATORIO: DOODLE
-- Ilustración 2D muy simple, amable, caricaturizada y comercial.
-- Contornos claros y limpios.
-- Formas redondeadas y suaves.
-- Cara claramente dibujada, no realista.
-- Ojos simples, nariz mínima, boca simple, cejas simples.
-- Cabeza un poco más grande que la proporción real, pero sin exagerar.
-- Colores planos o con sombra MUY sutil y gráfica.
-- Nada de modelado realista.
-- Debe sentirse como un personaje doodle premium, prolijo y adorable.
+
+PERSONALIDAD VISUAL:
+- Debe sentirse tierno, encantador, suave, adorable y muy simple.
+- Tiene que parecer una ilustración cute premium, casi como un sticker elegante o personaje de papelería ilustrada.
+- Debe ser claramente más dulce y minimalista que el estilo retro.
+
+FORMA Y PROPORCIONES:
+- Cabeza visiblemente más grande que el cuerpo.
+- Cuerpo pequeño, simplificado y amable.
+- Brazos y piernas simples, con muy pocos detalles.
+- Manos muy simplificadas.
+- Pies y calzado simples.
+
+ROSTRO:
+- Cara muy resumida, con pocos trazos.
+- Ojos pequeños y simples, tipo óvalo, punto o forma mínima.
+- Nariz casi mínima o reducida a un pequeño trazo.
+- Boca simple y amable.
+- Expresión simpática y serena.
+- Rasgos redondeados y suaves.
+
+TRAZO Y COLOR:
+- Contornos limpios, suaves y agradables.
+- Formas redondeadas.
+- Colores planos.
+- Casi sin sombreado; como máximo una sombra gráfica muy sutil.
+- Nada de volumen fuerte.
+- Nada de contraste agresivo.
+- Nada de apariencia de personaje de acción o videojuego clásico.
+
+IMPORTANTE:
+- NO debe parecer un personaje retro.
+- NO debe parecer realista.
+- NO debe parecer un muñeco genérico sin encanto.
+- Tiene que sentirse claramente “cute”, simple, blando y minimalista.
 `,
 
   retro: `
 ESTILO OBLIGATORIO: RETRO
-- Personaje 2D inspirado en videojuegos de plataformas clásicos de los 90.
-- Diseño original, sin copiar franquicias.
-- Cabeza un poco grande, manos y pies algo simplificados.
-- Rasgos faciales gráficos y caricaturescos.
-- Contornos expresivos y lectura rápida.
-- Pocos tonos por prenda, sombreado simple por bloques.
-- Debe verse como arte retro ilustrado, NO pixel art, NO realismo.
+
+PERSONALIDAD VISUAL:
+- Debe sentirse como un personaje de videojuego de plataformas clásico.
+- Tiene que verse con más presencia, más actitud visual y más fuerza que el estilo doodle.
+- Debe parecer arte promocional o personaje jugable de un platformer 2D clásico.
+
+FORMA Y PROPORCIONES:
+- Proporciones caricaturizadas pero más estructuradas y firmes que en doodle.
+- Cabeza un poco grande, pero no tan tierna ni tan redonda como en doodle.
+- Hombros, manos y zapatos con más peso visual.
+- Silueta más sólida y con más carácter.
+- Postura más firme y con más energía, aunque siga quieto.
+
+ROSTRO:
+- Rostro simplificado, pero con más presencia y definición que en doodle.
+- Ojos más expresivos.
+- Cejas más marcadas.
+- Boca breve pero clara.
+- Nariz simple.
+- Pelo y barba simplificados en masas definidas.
+
+TRAZO Y COLOR:
+- Contornos más marcados.
+- Formas algo más angulares o estructuradas.
+- Sombreado por bloques más evidente.
+- Más contraste.
+- Más lectura de volumen que doodle.
+- Sensación de diseño de personaje de videojuego.
+
+IMPORTANTE:
+- NO debe parecer una ilustración suave o editorial.
+- NO debe parecer pixel art.
+- NO debe parecer realista.
+- Tiene que distinguirse claramente del doodle por su actitud, estructura y presencia visual.
+- Diseño original, sin copiar franquicias existentes.
 `,
 
   pixel: `
 ESTILO OBLIGATORIO: PIXEL ART
+
 - Crear un sprite de pixel art auténtico.
 - Píxeles cuadrados visibles en todo el personaje.
 - Baja resolución aparente, ampliada con bordes duros.
@@ -120,6 +185,7 @@ ESTILO OBLIGATORIO: PIXEL ART
 - Peinado, barba y ropa resueltos por bloques de color.
 - Sin antialiasing, sin degradados, sin suavizado.
 - Debe verse como sprite diseñado píxel por píxel, NO foto pixelada.
+- Mantener una silueta clara y legible.
 `,
 };
 
@@ -257,14 +323,12 @@ export async function onRequestPost(context) {
 
     const fotos = tieneSegundaFoto ? [foto, foto2] : [foto];
 
-    // Generamos automáticamente las 3 opciones.
     const opciones = await Promise.all(
       ORDEN_ESTILOS.map((estilo) =>
         generarOpcionPorEstilo(fotos, estilo, env.OPENAI_API_KEY)
       )
     );
 
-    // Compatibilidad mínima con pruebas anteriores:
     const primeraOpcion = opciones[0] || null;
 
     return responderJSON({
