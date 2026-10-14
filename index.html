@@ -43,16 +43,14 @@ button:focus-visible,a:focus-visible { outline:3px solid #458cb1; outline-offset
 .hud-chip { display:inline-flex; align-items:center; gap:9px; border:1px solid #fff8e9b0; border-radius:18px; padding:10px 14px; color:#6c4030; background:#fff8e3d9; box-shadow:0 5px 20px #94573c18; backdrop-filter:blur(12px); font-weight:800; font-size:15px; }
 .hud-chip strong { font:700 20px 'Fredoka',sans-serif; }
 .hud-skip { pointer-events:auto; color:#6a4030; border:1px solid #fff5df99; border-radius:40px; background:#fff6e4c7; padding:12px 16px; font-weight:800; box-shadow:0 6px 24px #a85a3a18; }
-.hud-progress { position:absolute; top:77px; left:50%; transform:translateX(-50%); width:min(48vw,350px); text-align:center; color:#87533e; }
-.hud-progress-label { display:block; font-weight:800; letter-spacing:.18em; font-size:10px; margin-bottom:8px; }
-.progress-track { height:8px; border:1px solid #fff9e6; background:#fff8e6ad; border-radius:30px; box-shadow:0 2px 7px #a6745730; overflow:hidden; }
-#progress-fill { height:100%; width:0; background:linear-gradient(90deg,#d77956,#f2bb64); border-radius:30px; transition:width .15s linear; }
-.jump-wrap { pointer-events:none; position:absolute; bottom:max(16px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:9px; }
-#jump-btn { pointer-events:auto; width:88px; height:88px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#704733; background:radial-gradient(circle at 35% 25%,#fff9e8,#ffe3b9); border:5px solid #fff9e8; border-radius:50%; box-shadow:0 0 0 5px #9d674a48,0 8px 0 #b87959,0 18px 26px #74402c48; touch-action:manipulation; transition:transform .10s; }
-#jump-btn:active, #jump-btn.pressed { transform:translateY(5px) scale(.97); }
-.jump-symbol { font:700 31px/1 'Fredoka',sans-serif; height:34px; }
-.jump-word { font-weight:800; font-size:11px; letter-spacing:.08em; }
-.jump-hint { color:#fff8df; font-weight:800; text-shadow:0 2px 6px #9c5b43; font-size:11px; letter-spacing:.07em; }
+.hud-progress { display:none; }
+.hud-progress-label, .progress-track, #progress-fill { display:none; }
+.jump-wrap { pointer-events:none; position:absolute; bottom:max(18px,calc(env(safe-area-inset-bottom) + 8px)); left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:7px; }
+#jump-btn { pointer-events:auto; min-width:132px; height:54px; padding:0 18px; display:flex; flex-direction:row; align-items:center; justify-content:center; gap:10px; color:#755e58; background:rgba(255,251,247,.92); border:1px solid #f4ddd7; border-radius:999px; box-shadow:0 8px 28px rgba(119,94,88,.16); touch-action:manipulation; transition:transform .10s, box-shadow .10s, background .10s; }
+#jump-btn:active, #jump-btn.pressed { transform:translateY(2px) scale(.98); box-shadow:0 4px 16px rgba(119,94,88,.18); }
+.jump-symbol { font:700 24px/1 'Fredoka',sans-serif; width:24px; height:24px; display:flex; align-items:center; justify-content:center; color:#9c7a75; }
+.jump-word { font-weight:800; font-size:16px; letter-spacing:.01em; }
+.jump-hint { color:#7d6a65; font-weight:700; text-shadow:0 1px 6px rgba(255,255,255,.7); font-size:12px; letter-spacing:.01em; }
 /* INVITACIÓN */
 #invitation-view { display:none; position:fixed; z-index:20; inset:0; overflow-y:auto; overscroll-behavior:contain; background:linear-gradient(#f4c498 0%,#f8e8d2 36%,#fff6e9 70%); padding:0 16px 44px; }
 .invite-hero { margin:0 -16px; text-align:center; padding:52px 20px 80px; background:radial-gradient(circle at 78% 14%,#ffefd3 0 12%,transparent 13%),linear-gradient(165deg,#e4a477,#f7c792 80%); clip-path:ellipse(91% 100% at 50% 0%); }
@@ -93,7 +91,7 @@ button:focus-visible,a:focus-visible { outline:3px solid #458cb1; outline-offset
 #volver-jugar { display:none; width:max-content; margin:20px auto 0; padding:12px 18px; background:#fff8ea; border:1px solid #f0d7b9; border-radius:30px; color:#7d5038; font-weight:800; }
 .invite-footer { text-align:center; color:#ae8b71; font-size:12px; padding:25px 0 8px; }
 @media (max-width:580px) { .hud-progress { width:35vw; top:73px; } .hud-progress-label { font-size:9px; } .hud-chip { padding:9px 11px; font-size:12px; } .hud-chip strong { font-size:16px; } .hud-skip { font-size:11px; padding:11px; } .start-title { font-size:clamp(42px,11vw,68px); } .invite-actions { grid-template-columns:1fr 1fr; } .invite-actions a:last-child { grid-column:1/-1; } }
-@media (max-height:600px) { .start-title { font-size:clamp(39px,7vh,63px); } .start-content { margin:auto; padding:10px; } .start-subtitle { margin:8px auto; } .start-button { margin:10px auto 12px; padding:12px; } .skip-start { margin-top:6px; } .poster-caption { display:none; } .hud-progress { top:20px; } .jump-wrap { bottom:13px; } #jump-btn { width:67px; height:67px; } .jump-hint { display:none; } }
+@media (max-height:600px) { .start-title { font-size:clamp(39px,7vh,63px); } .start-content { margin:auto; padding:10px; } .start-subtitle { margin:8px auto; } .start-button { margin:10px auto 12px; padding:12px; } .skip-start { margin-top:6px; } .poster-caption { display:none; } .jump-wrap { bottom:13px; } #jump-btn { min-width:118px; height:48px; } .jump-hint { display:none; } }
 
 /* CAMINO AL ALTAR · dirección visual maestra */
 :root { --ink:#4e3e38; --muted:#857167; --gold:#d3a368; --coral:#ce857d; --cream:#fff3e8; --paper:#fffbf6; --brown:#796453; }
@@ -113,15 +111,15 @@ html,body{background:#f7e9db}
 .start-button:active{box-shadow:0 2px 0 #596e5d,0 8px 18px #5e70674a}
 .sound-choice{color:#756963}.sound-choice input{accent-color:#78907a}.skip-start{color:#806d67}.poster-caption{color:#685d54;text-shadow:0 1px 8px white;max-width:88vw;line-height:1.35;text-align:center;font-size:10px;letter-spacing:.05em;margin:0 auto max(16px,env(safe-area-inset-bottom))}
 .hud-chip,.hud-skip{background:#fffaf1e8;border-color:#f4dfd0;color:#65584c}
-.hud-progress{color:#756653}.progress-track{background:#fffaf3}.progress-track #progress-fill{background:linear-gradient(90deg,#93b99a,#d79a9f)}
-#jump-btn{background:radial-gradient(circle at 35% 25%,#fffefa,#fbe7e2);color:#80635f;border-color:#fffaf8;box-shadow:0 0 0 5px #bf9d9b49,0 7px 0 #d1a4a1,0 18px 26px #7f63594a}
+.hud-progress{display:none}
+#jump-btn{background:rgba(255,251,247,.92);color:#80635f;border-color:#fffaf8;box-shadow:0 8px 28px rgba(127,99,89,.14)}
 .jump-hint{color:#756452;text-shadow:0 1px 8px #fff}
 #invitation-view{background:linear-gradient(#e8d8d2 0%,#f5ebe4 38%,#fffaf4 100%)}
 .invite-hero{background:radial-gradient(circle at 75% 12%,#fff8e3 0 12%,transparent 20%),linear-gradient(150deg,#e6c4c5,#f6e7d1 78%)}
 .invite-title{color:#5c6054}.invite-hero small{color:#92736e}.invite-kind{color:#91776f}
 .detail-item{background:#f6eee6}.invite-card{background:#fffdf8}.detail-label{color:#99786f}.invite-actions a{background:#f9f2e9}.invite-actions a:hover{background:#f2e5d8}
 @media(max-height:690px){.start-title{font-size:clamp(32px,7vh,56px)}.start-content{padding:15px}.start-subtitle{font-size:13px;margin:8px auto}.start-button{padding:12px;margin:10px auto}.start-event{padding:7px 12px}.poster-caption{display:none}}
-@media(max-width:430px){.poster-caption{display:none}.hud-progress{top:69px;width:40vw}.hud-chip{padding:8px 10px}.hud-skip{padding:10px 11px}.hud-top{padding:12px}.start-content{width:94%}}
+@media(max-width:430px){.poster-caption{display:none}.hud-chip{padding:8px 10px}.hud-skip{padding:10px 11px}.hud-top{padding:12px}.start-content{width:94%}#jump-btn{min-width:116px;height:50px;padding:0 16px}.jump-word{font-size:15px}.jump-hint{font-size:11px}}
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
@@ -132,8 +130,7 @@ html,body{background:#f7e9db}
 <div id="game-container"></div>
 <div id="game-hud" aria-label="Controles del videojuego">
  <div class="hud-top"><div class="hud-chip" id="hud-count">💗 <strong>0 / 10</strong></div><button class="hud-skip" id="hud-skip" type="button">Ver invitación ↗</button></div>
- <div class="hud-progress"><span class="hud-progress-label">EL CAMINO AL SÍ</span><div class="progress-track"><div id="progress-fill"></div></div></div>
- <div class="jump-wrap"><button id="jump-btn" type="button" aria-label="Saltar"><span class="jump-symbol">↑</span><span class="jump-word">SALTAR</span></button><span class="jump-hint">TOCÁ O USÁ ESPACIO</span></div>
+ <div class="jump-wrap"><button id="jump-btn" type="button" aria-label="Saltar"><span class="jump-symbol">↑</span><span class="jump-word">Saltar</span></button><span class="jump-hint">Tocá para saltar</span></div>
 </div>
 <div id="invitation-view">
   <div class="invite-hero"><div class="invite-spark">♡ ✦ ♡</div><small>JUNTOS, HASTA EL FINAL</small><h1 class="invite-title" id="invite-names"></h1><div class="invite-kind" id="invite-kind"></div></div>
@@ -686,6 +683,9 @@ class EscenaJuego extends Phaser.Scene {
     obj.tomado=true;this.contador++;this.actualizarContador();
     particulas(this,this.personaX+10,this.suelo-this.playerHeight*.62-this.alturaSalto,7,false);
     this.tweens.add({targets:obj.sprite,alpha:0,scale:1.3,y:obj.sprite.y-35,duration:260,onComplete:()=>obj.sprite.setVisible(false)});
+    if(this.contador>=OBJETOS_PARA_GANAR){
+      this.time.delayedCall(240,()=>this.encuentro());
+    }
   }
   chocar(obstaculo){
     obstaculo.toco=true;this.hitCooldown=.85;
@@ -694,15 +694,21 @@ class EscenaJuego extends Phaser.Scene {
   }
   encuentro(){
     if(this.reunionActiva||this.terminado)return;
-    this.reunionActiva=true;this.distancia=DISTANCIA_NIVEL;
+    this.reunionActiva=true;
     this.avatar.setAngle(0);this.avatar.y=this.suelo;
     $('jump-btn').style.visibility='hidden';
-    const mid=(this.avatar.x+this.pareja.x)/2;
+    const arcoFinalX=Math.min(this.W-120,Math.max(this.W*.72,250));
+    const parejaFinalX=arcoFinalX+44;
+    const avatarFinalX=arcoFinalX-58;
+    if(this.arco.x<0||this.arco.x>this.W+160)this.arco.x=this.W+this.arco.displayWidth*.55;
+    if(this.pareja.x<0||this.pareja.x>this.W+160)this.pareja.x=this.W+Math.max(90,this.pareja.displayWidth*.8);
+    const mid=(avatarFinalX+parejaFinalX)/2;
     const cartel=this.add.text(mid,Math.max(45,this.suelo-this.playerHeight*2.05),'¡Se encontraron! ♡',{
       fontFamily:'Fredoka',fontSize:`${this.W<500?24:32}px`,fontStyle:'bold',color:'#865c62',stroke:'#fffaf1',strokeThickness:6
     }).setOrigin(.5).setDepth(19).setAlpha(0);
-    this.tweens.add({targets:this.avatar,x:this.avatar.x+34,duration:680,ease:'Sine.InOut'});
-    this.tweens.add({targets:this.pareja,x:this.pareja.x-34,duration:680,ease:'Sine.InOut'});
+    this.tweens.add({targets:this.arco,x:arcoFinalX+1,duration:620,ease:'Sine.Out'});
+    this.tweens.add({targets:this.avatar,x:avatarFinalX,duration:680,ease:'Sine.InOut'});
+    this.tweens.add({targets:this.pareja,x:parejaFinalX,duration:680,ease:'Sine.InOut'});
     this.tweens.add({targets:cartel,alpha:1,y:cartel.y-10,duration:600,ease:'Back.Out'});
     for(let i=0;i<6;i++)this.time.delayedCall(i*260,()=>particulas(this,mid,this.suelo-this.playerHeight*.9,8,true));
     this.time.delayedCall(2350,()=>this.abrirInvitacion());
@@ -740,11 +746,11 @@ class EscenaJuego extends Phaser.Scene {
       if(!o.toco&&this.hitCooldown<=0&&Math.abs(x-x0)<34&&this.alturaSalto<o.height*.58)this.chocar(o);
     });
     this.hitCooldown=Math.max(0,this.hitCooldown-dt);
-    // La persona 2 espera al final del recorrido, bajo el arco.
-    const metaX=x0+DISTANCIA_NIVEL-this.distancia+82;
-    this.arco.x=metaX+1;this.pareja.x=metaX+43;
-    $('progress-fill').style.width=Math.min(100,this.distancia/DISTANCIA_NIVEL*100)+'%';
-    if(this.distancia>=DISTANCIA_NIVEL)this.encuentro();
+    // La persona 2 se acerca sólo si todavía no se juntaron las 10 flores.
+    if(this.contador<OBJETOS_PARA_GANAR){
+      const metaX=x0+DISTANCIA_NIVEL-this.distancia+82;
+      this.arco.x=metaX+1;this.pareja.x=metaX+43;
+    }
   }
 }
 
