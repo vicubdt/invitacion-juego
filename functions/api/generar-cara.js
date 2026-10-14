@@ -3,18 +3,19 @@
 // Archivo: functions/api/generar-cara.js
 //
 // FLUJO ACTUAL:
-// - Recibe 1 foto (cumpleaños) o 2 fotos (casamiento).
-// - Genera automáticamente 3 opciones:
+// - 1 foto  -> evento individual / cumpleaños
+// - 2 fotos -> casamiento
+// - Si es casamiento, el cliente elige la vestimenta de cada protagonista:
+//     - vestido
+//     - traje
+// - Se generan automáticamente 3 opciones:
 //     1) doodle
 //     2) retro
 //     3) pixel
-// - Devuelve una estructura con "opciones" para que la interfaz
-//   las muestre y el usuario elija una.
 //
-// AJUSTE ARTÍSTICO DE ESTA VERSIÓN:
-// - Menos parecido exacto a la foto.
-// - Más prioridad al estilo visual.
-// - Doodle y retro deben diferenciarse mucho más entre sí.
+// IMPORTANTE:
+// - Esto sigue siendo una herramienta de prueba.
+// - El estilo elegido todavía no se guarda en una base real.
 // ===============================================================
 
 const MODELO = 'gpt-image-2.5-flare';
@@ -32,7 +33,7 @@ const ETIQUETA_ESTILO = {
 
 const DESCRIPCION_ESTILO = {
   doodle: 'Dibujo simple, adorable, suave y caricaturizado.',
-  retro: 'Personaje de videojuego clásico, con más presencia visual.',
+  retro: 'Personaje de videojuego clásico, simplificado y con más presencia visual.',
   pixel: 'Sprite pixelado con píxeles cuadrados visibles.',
 };
 
@@ -59,7 +60,8 @@ QUÉ TOMAR DE LA FOTO:
 - barba o bigote si son notorios
 - anteojos si aparecen
 - vibra general del rostro
-- tipo y color general de la ropa visible
+- tipo general de cuerpo y presencia
+- si la ropa visible sirve, usarla solo como referencia general
 
 QUÉ NO HACER:
 - no copiar exactamente la cara real
@@ -68,7 +70,7 @@ QUÉ NO HACER:
 - no pegar una cara realista sobre un cuerpo dibujado
 - no usar texturas realistas de piel, ojos o pelo
 - no copiar el fondo ni los objetos de la foto
-- no agregar accesorios inventados llamativos
+- no agregar accesorios inventados llamativos, salvo la vestimenta indicada
 
 SIMPLIFICACIÓN:
 - resumir los rasgos faciales a una versión caricaturizada
@@ -127,13 +129,11 @@ TRAZO Y COLOR:
 - Casi sin sombreado; como máximo una sombra gráfica muy sutil.
 - Nada de volumen fuerte.
 - Nada de contraste agresivo.
-- Nada de apariencia de personaje de acción o videojuego clásico.
 
 IMPORTANTE:
 - NO debe parecer un personaje retro.
 - NO debe parecer realista.
-- NO debe parecer un muñeco genérico sin encanto.
-- Tiene que sentirse claramente “cute”, simple, blando y minimalista.
+- Tiene que sentirse claramente cute, simple, blando y minimalista.
 `,
 
   retro: `
@@ -141,34 +141,35 @@ ESTILO OBLIGATORIO: RETRO
 
 PERSONALIDAD VISUAL:
 - Debe sentirse como un personaje de videojuego de plataformas clásico.
-- Tiene que verse con más presencia, más actitud visual y más fuerza que el estilo doodle.
-- Debe parecer arte promocional o personaje jugable de un platformer 2D clásico.
+- Tiene que verse con más presencia y más carácter que el estilo doodle.
+- Debe parecer un personaje jugable de un platformer 2D clásico.
+- NO debe volverse semirrealista ni demasiado detallado.
 
 FORMA Y PROPORCIONES:
-- Proporciones caricaturizadas pero más estructuradas y firmes que en doodle.
-- Cabeza un poco grande, pero no tan tierna ni tan redonda como en doodle.
-- Hombros, manos y zapatos con más peso visual.
-- Silueta más sólida y con más carácter.
-- Postura más firme y con más energía, aunque siga quieto.
+- Proporciones caricaturizadas, simples y estructuradas.
+- Cabeza algo más grande que la real, pero menos tierna que en doodle.
+- Hombros, manos y zapatos con algo más de peso visual.
+- Silueta sólida, clara y de lectura rápida.
+- Postura firme, aunque siga quieto.
 
 ROSTRO:
-- Rostro simplificado, pero con más presencia y definición que en doodle.
-- Ojos más expresivos.
-- Cejas más marcadas.
-- Boca breve pero clara.
-- Nariz simple.
+- Rostro simplificado, gráfico y sintético.
+- Ojos expresivos pero sencillos.
+- Cejas marcadas.
+- Boca breve y simple.
+- Nariz resumida.
 - Pelo y barba simplificados en masas definidas.
 
 TRAZO Y COLOR:
-- Contornos más marcados.
-- Formas algo más angulares o estructuradas.
-- Sombreado por bloques más evidente.
-- Más contraste.
-- Más lectura de volumen que doodle.
-- Sensación de diseño de personaje de videojuego.
+- Contornos más marcados que en doodle.
+- Formas más geométricas o estructuradas.
+- Sombreado por bloques simple, con pocos planos.
+- Colores nítidos.
+- Nada de pliegues complejos, textura realista ni exceso de detalles.
+- Tiene que sentirse más videojuego y menos ilustración suave.
 
 IMPORTANTE:
-- NO debe parecer una ilustración suave o editorial.
+- NO debe parecer una ilustración editorial suave.
 - NO debe parecer pixel art.
 - NO debe parecer realista.
 - Tiene que distinguirse claramente del doodle por su actitud, estructura y presencia visual.
@@ -228,16 +229,78 @@ async function validarFoto(archivo, nombre) {
   return valido ? null : `${nombre} no parece ser una imagen válida.`;
 }
 
-function construirPrompt(estilo) {
-  return `${PROMPT_COMUN}\n${PROMPTS_ESTILO[estilo]}`;
+function normalizarVestimenta(valor) {
+  const limpio = String(valor || '').trim().toLowerCase();
+
+  if (['vestido', 'vestido_de_novia', 'novia', 'dress'].includes(limpio)) return 'vestido';
+  if (['traje', 'novio', 'suit'].includes(limpio)) return 'traje';
+
+  return null;
 }
 
-async function generarUnaImagen(foto, estilo, apiKey) {
+function bloqueVestimentaCumple() {
+  return `
+CONTEXTO DEL EVENTO:
+- Evento individual o cumpleaños.
+- Tomá como referencia la ropa visible en la foto, simplificándola según el estilo.
+- Si la ropa no se ve completa o no se entiende bien, completala de forma discreta con un look sencillo,
+  limpio y combinable, preferentemente en tonos neutros u oscuros.
+- No inventes un vestuario exagerado ni detallista.
+`;
+}
+
+function bloqueVestimentaCasamiento(vestimenta) {
+  if (vestimenta === 'vestido') {
+    return `
+CONTEXTO DEL EVENTO:
+- Casamiento.
+- VESTIMENTA OBLIGATORIA: vestido de novia.
+
+INDICACIONES DE VESTUARIO:
+- Dibujar al personaje con un vestido de novia claro, elegante y reconocible.
+- Adaptar el vestido al estilo visual elegido.
+- Mantenerlo simple, limpio y sin exceso de detalles.
+- Puede incluir falda larga o silueta de vestido nupcial sencilla.
+- Si agregás accesorios, que sean mínimos y discretos.
+- No volver el vestido hiperrealista ni demasiado recargado.
+`;
+  }
+
+  return `
+CONTEXTO DEL EVENTO:
+- Casamiento.
+- VESTIMENTA OBLIGATORIA: traje.
+
+INDICACIONES DE VESTUARIO:
+- Dibujar al personaje con traje elegante y reconocible.
+- Adaptar el traje al estilo visual elegido.
+- Mantenerlo simple, limpio y sin exceso de detalles.
+- Puede incluir saco, pantalón y camisa en versión simplificada.
+- No volver el traje hiperrealista ni demasiado recargado.
+`;
+}
+
+function construirPrompt({ estilo, esCasamiento, vestimenta }) {
+  const bloqueEvento = esCasamiento
+    ? bloqueVestimentaCasamiento(vestimenta)
+    : bloqueVestimentaCumple();
+
+  return `${PROMPT_COMUN}
+
+${bloqueEvento}
+
+${PROMPTS_ESTILO[estilo]}`;
+}
+
+async function generarUnaImagen({ foto, estilo, apiKey, esCasamiento, vestimenta }) {
   const formulario = new FormData();
 
   formulario.append('model', MODELO);
   formulario.append('image', foto, foto.name || 'referencia.png');
-  formulario.append('prompt', construirPrompt(estilo));
+  formulario.append(
+    'prompt',
+    construirPrompt({ estilo, esCasamiento, vestimenta })
+  );
   formulario.append('size', TAMANO);
   formulario.append('quality', CALIDAD);
   formulario.append('background', 'transparent');
@@ -274,9 +337,17 @@ async function generarUnaImagen(foto, estilo, apiKey) {
   return `data:image/png;base64,${base64}`;
 }
 
-async function generarOpcionPorEstilo(fotos, estilo, apiKey) {
+async function generarOpcionPorEstilo({ fotos, estilo, apiKey, esCasamiento, vestimentas }) {
   const personajes = await Promise.all(
-    fotos.map((archivo) => generarUnaImagen(archivo, estilo, apiKey))
+    fotos.map((foto, index) =>
+      generarUnaImagen({
+        foto,
+        estilo,
+        apiKey,
+        esCasamiento,
+        vestimenta: esCasamiento ? vestimentas[index] : null,
+      })
+    )
   );
 
   return {
@@ -313,6 +384,7 @@ export async function onRequestPost(context) {
     }
 
     const tieneSegundaFoto = foto2 !== null && foto2 !== '';
+    const esCasamiento = tieneSegundaFoto;
 
     if (tieneSegundaFoto) {
       const errorFoto2 = await validarFoto(foto2, 'la segunda foto');
@@ -321,11 +393,32 @@ export async function onRequestPost(context) {
       }
     }
 
-    const fotos = tieneSegundaFoto ? [foto, foto2] : [foto];
+    const vestimentas = [];
+
+    if (esCasamiento) {
+      const vestimenta1 = normalizarVestimenta(entrada.get('vestimenta1'));
+      const vestimenta2 = normalizarVestimenta(entrada.get('vestimenta2'));
+
+      if (!vestimenta1 || !vestimenta2) {
+        return responderJSON({
+          error: 'Para casamiento tenés que elegir la vestimenta de ambos protagonistas.'
+        }, 400);
+      }
+
+      vestimentas.push(vestimenta1, vestimenta2);
+    }
+
+    const fotos = esCasamiento ? [foto, foto2] : [foto];
 
     const opciones = await Promise.all(
       ORDEN_ESTILOS.map((estilo) =>
-        generarOpcionPorEstilo(fotos, estilo, env.OPENAI_API_KEY)
+        generarOpcionPorEstilo({
+          fotos,
+          estilo,
+          apiKey: env.OPENAI_API_KEY,
+          esCasamiento,
+          vestimentas,
+        })
       )
     );
 
@@ -333,8 +426,10 @@ export async function onRequestPost(context) {
 
     return responderJSON({
       versionFlujo: 'tres_opciones',
+      tipoEvento: esCasamiento ? 'casamiento' : 'individual',
       cantidadProtagonistas: fotos.length,
       estilos: ORDEN_ESTILOS,
+      vestimentas: esCasamiento ? vestimentas : [],
       opciones,
       imagen: primeraOpcion?.personajes?.[0] || null,
       ...(fotos.length === 2 ? { imagen2: primeraOpcion?.personajes?.[1] || null } : {}),
