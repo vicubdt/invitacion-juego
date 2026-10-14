@@ -1,18 +1,22 @@
-
 // ===============================================================
-// INVITACIONES-JUEGO — Generador de personajes (PRUEBA)
-// Ubicación en GitHub: functions/api/generar-cara.js
+// INVITACIONES-JUEGO — Generador de personajes (LABORATORIO)
+// Archivo: functions/api/generar-cara.js
 //
-// Recibe POST multipart/form-data:
-//   foto   : primera foto (obligatoria)
-//   foto2  : segunda foto (opcional)
-//   estilo : doodle | retro | pixel (opcional, por defecto doodle)
+// NUEVO FLUJO:
+// - Ya NO recibe un estilo elegido por el usuario.
+// - Recibe 1 foto (cumpleaños) o 2 fotos (casamiento).
+// - Genera automáticamente las 3 opciones:
+//     1) doodle
+//     2) retro
+//     3) pixel
+// - Devuelve una estructura con "opciones", para que la interfaz
+//   pueda mostrarlas y el usuario elija una.
 //
-// Devuelve { imagen, imagen2?, imagenes, estilo, cantidad }.
-// Conserva "imagen" para que funcione la página de test original.
-// IMPORTANTE: este endpoint aún NO debe ofrecerse a compradores.
-// Antes de comercializarlo necesitará autorización, límite de uso,
-// control de gastos, almacenamiento seguro y gestión de consentimiento.
+// IMPORTANTE:
+// - Esta sigue siendo una herramienta de prueba.
+// - El botón "Elegir este estilo" todavía NO impacta en el juego final.
+// - Antes de llevarlo a producción hay que sumar autenticación,
+//   persistencia, guardado definitivo, límites de uso y control de costos.
 // ===============================================================
 
 const MODELO = 'gpt-image-2.5-flare';
@@ -20,110 +24,108 @@ const CALIDAD = 'high';
 const TAMANO = '1024x1536';
 const MAX_FOTO_BYTES = 8 * 1024 * 1024;
 
-// MISMA DIRECCIÓN ARTÍSTICA GENERAL PARA TODOS LOS ESTILOS:
-// son personajes de videojuego, NO retratos fotorrealistas.
+const ORDEN_ESTILOS = ['doodle', 'retro', 'pixel'];
+
+const ETIQUETA_ESTILO = {
+  doodle: 'Doodle',
+  retro: 'Retro',
+  pixel: 'Pixel art',
+};
+
+const DESCRIPCION_ESTILO = {
+  doodle: 'Dibujo simple, caricaturizado y simpático.',
+  retro: 'Personaje de videojuego de plataformas clásico.',
+  pixel: 'Sprite pixelado con píxeles cuadrados visibles.',
+};
+
 const PROMPT_COMUN = `
-OBJETIVO: transformá la persona de la foto adjunta en UN personaje
-CARICATURIZADO, DE CUERPO COMPLETO, para un videojuego 2D de
-invitaciones a fiestas. La foto sirve únicamente como REFERENCIA
-DE IDENTIDAD. REDIBUJÁ el personaje desde cero.
+OBJETIVO:
+Transformá a la persona de la foto adjunta en UN personaje ORIGINAL para
+un videojuego 2D de invitaciones interactivas. La foto es solo referencia
+de identidad. El resultado debe ser una CARICATURA ILUSTRADA, no un retrato.
 
-MUY IMPORTANTE — CARICATURA, NO RETRATO:
-- La cara tiene que estar claramente ILUSTRADA, no calcada, no fotografiada.
-- Simplificá muchísimo el rostro: pocos trazos y formas básicas. Sin
-  texturas de piel, poros, arrugas finas, brillos fotográficos, pestañas
-  individuales, iris detallados, dientes realistas ni barba pelo por pelo.
-- Los ojos NO deben parecer ojos de una fotografía. Dibujalos como
-  elementos gráficos simples propios del estilo elegido.
-- La nariz y la boca deben resolverse en formas muy simples.
-- El pelo debe convertirse en masas o grupos de formas, no en hebras.
-- Si hay barba, representala como una forma o área simplificada.
-- NO uses una cara realista pegada sobre un cuerpo ilustrado.
-- NO generes una ilustración semirrealista, retrato digital, pintura
-  realista, imagen 3D, render CGI o filtro de foto.
+MUY IMPORTANTE:
+- NO copies la cara de manera realista.
+- NO hagas una ilustración semirrealista.
+- NO pegues un rostro fotográfico sobre un cuerpo dibujado.
+- REDIBUJÁ el personaje desde cero en el estilo pedido.
+- El resultado debe verse claramente dibujado o diseñado como personaje,
+  no como una foto con filtro.
 
-CONSERVAR LA IDENTIDAD SIN COPIAR EL ROSTRO:
-- Mantené la combinación de rasgos fácilmente reconocibles:
-  color y forma general del pelo, peinado, tono de piel, barba o bigote,
-  anteojos y accesorios verdaderamente visibles, silueta facial general.
-- Simplificá TODOS esos rasgos a un lenguaje gráfico consistente.
-- Conservá el tipo y color de la ropa que se ve. Si solo aparece el
-  torso, completá el pantalón y el calzado de forma sencilla y discreta.
-- No agregues disfraces, sombreros, mochilas ni accesorios inventados.
-- No copies el fondo ni los objetos de la fotografía.
+IDENTIDAD A CONSERVAR:
+- tono de piel
+- peinado y color de pelo
+- forma general del rostro
+- barba o bigote si existen
+- anteojos si existen
+- tipo y color general de la ropa visible
 
-COMPOSICIÓN PARA EL JUEGO:
-- Un único personaje, parado, de frente o tres cuartos suave.
-- Pose neutra, brazos separados levemente del cuerpo, manos visibles.
-- Dos piernas y ambos pies totalmente visibles; postura sin movimiento.
-- Cuerpo entero de la cabeza a los zapatos, sin recortar ninguna parte.
-- Figura centrada y grande, con margen transparente alrededor.
-- Silueta clara al verla pequeña en la pantalla de un celular.
-- Sin texto, firma, insignia, objetos sueltos, piso ni escenario.
-- Fondo REALMENTE TRANSPARENTE (alfa), sin sombra sobre el suelo.
+SIMPLIFICACIÓN VISUAL:
+- reducir muchísimo el detalle facial
+- evitar textura de piel, poros, brillos realistas y facciones complejas
+- ojos simplificados, nariz simplificada, boca simplificada
+- pelo como masas o bloques, no pelo por pelo
+- barba como forma simplificada, no pelo por pelo
+- ropa simplificada, con lectura clara
+
+COMPOSICIÓN:
+- mostrar UN SOLO personaje
+- cuerpo completo, de cabeza a pies
+- pose quieta, de pie
+- brazos levemente separados del cuerpo
+- piernas y pies bien visibles
+- postura frontal o tres cuartos suave
+- figura centrada
+- sin fondo, sin piso, sin escenario, sin texto, sin objetos adicionales
+- fondo REALMENTE transparente
 
 CALIDAD:
-Debe verse como un personaje ORIGINAL de un videojuego 2D cuidado,
-no como una foto con efecto artístico ni como un emoji genérico.
-Evitá anatomía incorrecta, dedos extra y detalles aleatorios.
+- silueta clara para verse bien en celular
+- personaje consistente y prolijo
+- sin dedos extra, sin extremidades incorrectas, sin deformaciones
+- debe verse como un personaje vendible y de calidad
 `;
 
 const PROMPTS_ESTILO = {
   doodle: `
-ESTILO OBLIGATORIO: DOODLE / DIBUJO EDITORIAL MUY SIMPLE.
-- Dibujo 2D hecho de formas suaves y redondeadas, fresco y simpático.
-- Contornos definidos con grosor uniforme y ligeramente orgánico.
-- Colores planos. CERO degradados fotográficos. A lo sumo una pequeña
-  sombra de color plano, nunca modelado realista.
-- Cara deliberadamente esquemática: ojos como formas ovaladas o puntos,
-  cejas como trazos, nariz como pequeño trazo, boca como línea expresiva.
-- Pelo en 2 a 5 masas de color, sin textura ni mechones individuales.
-- Barba o bigote como una sola forma gráfica, si corresponde.
-- Proporciones caricaturescas: cabeza visiblemente más grande que
-  la natural y cuerpo simplificado, pero sin convertirse en un bebé.
-- Brazos, piernas, ropa y zapatos resueltos con formas sencillas.
-- Debería poder reproducirse como una ilustración vectorial limpia.
-- NO estilo manga, NO muñeco 3D, NO realismo, NO retrato detallado.
+ESTILO OBLIGATORIO: DOODLE
+- Ilustración 2D muy simple, amable, caricaturizada y comercial.
+- Contornos claros y limpios.
+- Formas redondeadas y suaves.
+- Cara claramente dibujada, no realista.
+- Ojos simples, nariz mínima, boca simple, cejas simples.
+- Cabeza un poco más grande que la proporción real, pero sin exagerar.
+- Colores planos o con sombra MUY sutil y gráfica.
+- Nada de modelado realista.
+- Debe sentirse como un personaje doodle premium, prolijo y adorable.
 `,
 
   retro: `
-ESTILO OBLIGATORIO: PERSONAJE RETRO DE PLATAFORMAS, ARTE 2D CLÁSICO.
-- Inspiración en los videojuegos de plataformas de los años 90,
-  pero diseño 100% ORIGINAL y sin copiar personajes conocidos.
-- Silueta compacta, expresiva y dinámica AUNQUE LA POSE SEA QUIETA.
-- Cabeza un poco grande, manos y calzado ligeramente exagerados.
-- Rasgos faciales muy gráficos: ojos simples, nariz pequeña, boca breve,
-  pelo y barba como zonas sólidas de color. NADA de cara fotográfica.
-- Contorno exterior expresivo y contornos interiores mínimos.
-- Iluminación con solamente 2 o 3 tonos planos por material,
-  como arte promocional de un juego clásico de consola.
-- Formas geométricas bien diseñadas, contraste fuerte y lectura rápida.
-- NO foto pintada, NO sombreado suave, NO textura realista.
-- A DIFERENCIA DE PIXEL ART: NO mostrar cuadrícula de píxeles ni
-  bordes escalonados. Debe verse como un sprite retro ilustrado nítido.
+ESTILO OBLIGATORIO: RETRO
+- Personaje 2D inspirado en videojuegos de plataformas clásicos de los 90.
+- Diseño original, sin copiar franquicias.
+- Cabeza un poco grande, manos y pies algo simplificados.
+- Rasgos faciales gráficos y caricaturescos.
+- Contornos expresivos y lectura rápida.
+- Pocos tonos por prenda, sombreado simple por bloques.
+- Debe verse como arte retro ilustrado, NO pixel art, NO realismo.
 `,
 
   pixel: `
-ESTILO OBLIGATORIO: PIXEL ART AUTÉNTICO DE VIDEOJUEGO.
-- Construí el personaje como un sprite de baja resolución aparente,
-  aproximadamente 64 x 96 píxeles de diseño, ampliado con píxeles
-  CUADRADOS de bordes perfectamente duros (nearest-neighbor).
-- Cada parte de la cara debe estar representada por muy pocos píxeles.
-  NO intentes reproducir los ojos ni la piel de forma realista.
-- Peinado, barba, tono de piel y ropa deben reconocerse mediante
-  BLOQUES DE COLOR, no por detalles diminutos.
-- Usá una paleta limitada y sombras en 1 o 2 bloques por zona.
-- Sin antialiasing, sin difuminados, sin pinceladas y sin degradados.
-- Bordes escalonados claramente pixelados en TODO el personaje,
-  incluidos rostro, pelo, manos, ropa y calzado.
-- NO foto con filtro pixelado. NO ilustración convencional con fondo
-  cuadriculado. Debe ser un sprite dibujado píxel por píxel.
+ESTILO OBLIGATORIO: PIXEL ART
+- Crear un sprite de pixel art auténtico.
+- Píxeles cuadrados visibles en todo el personaje.
+- Baja resolución aparente, ampliada con bordes duros.
+- Rasgos faciales representados con pocos píxeles.
+- Peinado, barba y ropa resueltos por bloques de color.
+- Sin antialiasing, sin degradados, sin suavizado.
+- Debe verse como sprite diseñado píxel por píxel, NO foto pixelada.
 `,
 };
 
-function json(datos, status = 200) {
+function responderJSON(datos, estado = 200) {
   return new Response(JSON.stringify(datos), {
-    status,
+    status: estado,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       'Cache-Control': 'no-store',
@@ -132,110 +134,154 @@ function json(datos, status = 200) {
   });
 }
 
-function estiloValido(valor) {
-  const nombre = String(valor || 'doodle').trim().toLowerCase();
-  const alias = {
-    'pixel-art': 'pixel', pixelart: 'pixel', 'pixel_art': 'pixel',
-    '16bits': 'retro', 'retro-16bits': 'retro',
-  };
-  const estilo = alias[nombre] || nombre;
-  return Object.prototype.hasOwnProperty.call(PROMPTS_ESTILO, estilo)
-    ? estilo : null;
+async function validarFoto(archivo, nombre) {
+  if (!archivo || typeof archivo.arrayBuffer !== 'function' || typeof archivo.slice !== 'function') {
+    return `Falta ${nombre}. Subí una foto JPG, PNG o WebP.`;
+  }
+
+  if (!archivo.size || archivo.size > MAX_FOTO_BYTES) {
+    return `${nombre} debe pesar más de 0 bytes y como máximo 8 MB.`;
+  }
+
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(archivo.type)) {
+    return `${nombre} debe estar en formato JPG, PNG o WebP.`;
+  }
+
+  const b = new Uint8Array(await archivo.slice(0, 12).arrayBuffer());
+  const esJPG = b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
+  const esPNG = b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47;
+  const esWebP =
+    String.fromCharCode(...b.slice(0, 4)) === 'RIFF' &&
+    String.fromCharCode(...b.slice(8, 12)) === 'WEBP';
+
+  const valido =
+    (archivo.type === 'image/jpeg' && esJPG) ||
+    (archivo.type === 'image/png' && esPNG) ||
+    (archivo.type === 'image/webp' && esWebP);
+
+  return valido ? null : `${nombre} no parece ser una imagen válida.`;
 }
 
-async function errorDeFoto(foto, etiqueta) {
-  if (!foto || typeof foto.slice !== 'function' || typeof foto.size !== 'number') {
-    return `Falta ${etiqueta}. Elegí una imagen JPG, PNG o WebP.`;
-  }
-  if (!foto.size || foto.size > MAX_FOTO_BYTES) {
-    return `${etiqueta} debe pesar entre 1 byte y 8 MB.`;
-  }
-  if (!['image/jpeg', 'image/png', 'image/webp'].includes(foto.type)) {
-    return `${etiqueta} debe ser JPG, PNG o WebP.`;
-  }
-
-  // Verificación rápida del encabezado real (no solo la extensión).
-  const bytes = new Uint8Array(await foto.slice(0, 12).arrayBuffer());
-  const jpg = bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255;
-  const png = bytes[0] === 137 && bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71;
-  const webp = String.fromCharCode(...bytes.slice(0, 4)) === 'RIFF'
-    && String.fromCharCode(...bytes.slice(8, 12)) === 'WEBP';
-  if ((foto.type === 'image/jpeg' && jpg) ||
-      (foto.type === 'image/png' && png) ||
-      (foto.type === 'image/webp' && webp)) return null;
-  return `${etiqueta} no parece un archivo de imagen válido.`;
+function construirPrompt(estilo) {
+  return `${PROMPT_COMUN}\n${PROMPTS_ESTILO[estilo]}`;
 }
 
-async function generarPersonaje(foto, estilo, apiKey) {
-  const datos = new FormData();
-  datos.append('model', MODELO);
-  datos.append('image', foto, foto.name || 'foto.png');
-  datos.append('prompt', `${PROMPT_COMUN}\n${PROMPTS_ESTILO[estilo]}`);
-  datos.append('size', TAMANO);
-  datos.append('quality', CALIDAD);
-  datos.append('background', 'transparent');
-  datos.append('output_format', 'png');
-  datos.append('n', '1');
-  // No se envía input_fidelity: no corresponde a este modelo.
+async function generarUnaImagen(foto, estilo, apiKey) {
+  const formulario = new FormData();
+
+  formulario.append('model', MODELO);
+  formulario.append('image', foto, foto.name || 'referencia.png');
+  formulario.append('prompt', construirPrompt(estilo));
+  formulario.append('size', TAMANO);
+  formulario.append('quality', CALIDAD);
+  formulario.append('background', 'transparent');
+  formulario.append('output_format', 'png');
+  formulario.append('n', '1');
 
   const respuesta = await fetch('https://api.openai.com/v1/images/edits', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${apiKey}` },
-    body: datos,
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: formulario,
   });
+
   const resultado = await respuesta.json().catch(() => null);
+
   if (!respuesta.ok) {
-    // El error técnico queda solo en Cloudflare, sin exponerlo al cliente.
-    console.error('OpenAI:', respuesta.status, resultado?.error?.message || 'Error desconocido');
-    throw new Error('OpenAI no pudo generar la imagen. Revisá los registros de Cloudflare.');
+    console.error(
+      'Error de la API de imágenes:',
+      respuesta.status,
+      resultado?.error?.message || 'Sin detalle'
+    );
+    throw new Error(
+      `OpenAI respondió con estado ${respuesta.status}. Revisá el log de Cloudflare.`
+    );
   }
+
   const base64 = resultado?.data?.[0]?.b64_json;
-  if (!base64 || typeof base64 !== 'string') {
-    throw new Error('OpenAI respondió sin una imagen válida.');
+
+  if (typeof base64 !== 'string' || !base64.length) {
+    throw new Error('OpenAI no devolvió la imagen esperada.');
   }
+
   return `data:image/png;base64,${base64}`;
 }
 
-export async function onRequestPost({ request, env }) {
+async function generarOpcionPorEstilo(fotos, estilo, apiKey) {
+  const personajes = await Promise.all(
+    fotos.map((archivo) => generarUnaImagen(archivo, estilo, apiKey))
+  );
+
+  return {
+    estilo,
+    etiqueta: ETIQUETA_ESTILO[estilo],
+    descripcion: DESCRIPCION_ESTILO[estilo],
+    personajes,
+  };
+}
+
+export async function onRequestPost(context) {
   try {
+    const { request, env } = context;
+
     if (!env.OPENAI_API_KEY) {
-      return json({ error: 'Falta configurar OPENAI_API_KEY en Cloudflare.' }, 500);
+      return responderJSON({
+        error: 'Falta OPENAI_API_KEY en las variables de entorno de Cloudflare.'
+      }, 500);
     }
-    if (!(request.headers.get('content-type') || '').toLowerCase().includes('multipart/form-data')) {
-      return json({ error: 'El pedido debe enviarse como multipart/form-data.' }, 415);
+
+    if (!request.headers.get('content-type')?.toLowerCase().includes('multipart/form-data')) {
+      return responderJSON({
+        error: 'El formulario debe enviarse como multipart/form-data.'
+      }, 415);
     }
 
     const entrada = await request.formData();
-    const estilo = estiloValido(entrada.get('estilo'));
-    if (!estilo) return json({ error: 'Estilo inválido: elegí doodle, retro o pixel.' }, 400);
-
     const foto = entrada.get('foto');
     const foto2 = entrada.get('foto2');
-    const error1 = await errorDeFoto(foto, 'La primera foto');
-    if (error1) return json({ error: error1 }, 400);
-    if (foto2 !== null && foto2 !== '') {
-      const error2 = await errorDeFoto(foto2, 'La segunda foto');
-      if (error2) return json({ error: error2 }, 400);
+
+    const errorFoto1 = await validarFoto(foto, 'la primera foto');
+    if (errorFoto1) {
+      return responderJSON({ error: errorFoto1 }, 400);
     }
 
-    // Dos protagonistas: dos imágenes independientes para poder colocarlos
-    // por separado en el juego. Ambos usan el mismo estilo elegido.
-    const fotos = foto2 && foto2 !== '' ? [foto, foto2] : [foto];
-    const imagenes = await Promise.all(
-      fotos.map(archivo => generarPersonaje(archivo, estilo, env.OPENAI_API_KEY))
+    const tieneSegundaFoto = foto2 !== null && foto2 !== '';
+
+    if (tieneSegundaFoto) {
+      const errorFoto2 = await validarFoto(foto2, 'la segunda foto');
+      if (errorFoto2) {
+        return responderJSON({ error: errorFoto2 }, 400);
+      }
+    }
+
+    const fotos = tieneSegundaFoto ? [foto, foto2] : [foto];
+
+    // Generamos automáticamente las 3 opciones.
+    const opciones = await Promise.all(
+      ORDEN_ESTILOS.map((estilo) =>
+        generarOpcionPorEstilo(fotos, estilo, env.OPENAI_API_KEY)
+      )
     );
 
-    return json({
-      imagen: imagenes[0], // Compatibilidad con test-ia anterior.
-      ...(imagenes.length === 2 ? { imagen2: imagenes[1] } : {}),
-      imagenes,
-      estilo,
-      cantidad: imagenes.length,
+    // Compatibilidad mínima con pruebas anteriores:
+    const primeraOpcion = opciones[0] || null;
+
+    return responderJSON({
+      versionFlujo: 'tres_opciones',
+      cantidadProtagonistas: fotos.length,
+      estilos: ORDEN_ESTILOS,
+      opciones,
+      imagen: primeraOpcion?.personajes?.[0] || null,
+      ...(fotos.length === 2 ? { imagen2: primeraOpcion?.personajes?.[1] || null } : {}),
     });
+
   } catch (error) {
-    console.error('Error en generar-cara:', error);
-    return json({
-      error: 'No se pudo generar el personaje. Probá nuevamente más tarde.',
+    console.error('Fallo en generar-cara:', error);
+
+    return responderJSON({
+      error: 'No se pudieron generar las opciones de personaje.',
+      detalle: String(error?.message || error),
     }, 502);
   }
 }
