@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#f6ce97">
-<title>Una aventura especial · Invitación interactiva</title>
+<meta name="theme-color" content="#f1dbc9">
+<title>Camino al altar · Invitación interactiva</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -94,6 +94,35 @@ button:focus-visible,a:focus-visible { outline:3px solid #458cb1; outline-offset
 .invite-footer { text-align:center; color:#ae8b71; font-size:12px; padding:25px 0 8px; }
 @media (max-width:580px) { .hud-progress { width:35vw; top:73px; } .hud-progress-label { font-size:9px; } .hud-chip { padding:9px 11px; font-size:12px; } .hud-chip strong { font-size:16px; } .hud-skip { font-size:11px; padding:11px; } .start-title { font-size:clamp(42px,11vw,68px); } .invite-actions { grid-template-columns:1fr 1fr; } .invite-actions a:last-child { grid-column:1/-1; } }
 @media (max-height:600px) { .start-title { font-size:clamp(39px,7vh,63px); } .start-content { margin:auto; padding:10px; } .start-subtitle { margin:8px auto; } .start-button { margin:10px auto 12px; padding:12px; } .skip-start { margin-top:6px; } .poster-caption { display:none; } .hud-progress { top:20px; } .jump-wrap { bottom:13px; } #jump-btn { width:67px; height:67px; } .jump-hint { display:none; } }
+
+/* CAMINO AL ALTAR · dirección visual maestra */
+:root { --ink:#4e3e38; --muted:#857167; --gold:#d3a368; --coral:#ce857d; --cream:#fff3e8; --paper:#fffbf6; --brown:#796453; }
+html,body{background:#f7e9db}
+.start-screen { overflow-y:auto;overscroll-behavior:contain;background:radial-gradient(circle at 78% 13%,#fff6d8 0 12%,transparent 32%),linear-gradient(180deg,#fcf2e8 0%,#f5dddb 56%,#e6cbb6 100%); }
+.poster-glow { left:54%;top:12%;width:min(74vw,450px);background:radial-gradient(circle,#fff9e6 0 25%,#fce4c46a 49%,transparent 72%); }
+.poster-flowers {position:absolute;left:-4%;right:-4%;bottom:-5%;height:28%;z-index:-1;pointer-events:none;background:radial-gradient(circle at 6% 62%,#fff6ed 0 6px,transparent 7px),radial-gradient(circle at 12% 74%,#d4969e 0 8px,transparent 9px),radial-gradient(circle at 29% 89%,#ffecdc 0 11px,transparent 12px),radial-gradient(circle at 68% 79%,#fffaf3 0 10px,transparent 11px),radial-gradient(circle at 93% 65%,#d59aa2 0 7px,transparent 8px),linear-gradient(0deg,#8ba98c 0%,#bad1a9 31%,transparent 90%);clip-path:ellipse(80% 100% at 50% 100%);opacity:.75}
+.poster-bouquet {position:absolute;bottom:8%;width:clamp(85px,16vw,160px);height:170px;opacity:.92;z-index:-1}
+.poster-bouquet.left{left:4%}.poster-bouquet.right{right:4%;transform:scaleX(-1)}
+.start-content{width:min(92%,580px);background:#fffcf4c9;border:1px solid #ffffffcf;border-radius:32px;box-shadow:0 24px 60px #9f7c6b1c;padding:clamp(22px,4vh,36px) clamp(16px,4vw,34px);backdrop-filter:blur(9px);margin:auto 16px;}
+.eyebrow{color:#a07473;letter-spacing:.15em}
+.start-title{color:#4e5149;font-size:clamp(38px,7vw,72px);letter-spacing:-.045em;line-height:1.04;text-shadow:none}
+.start-title span{color:#ba7779}
+.start-subtitle{color:#776a64;margin:15px auto 18px;line-height:1.5}
+.start-event{color:#8e675f;background:#fff9f1;border:1px solid #ebd4c5}
+.start-button{background:linear-gradient(180deg,#8fa88f,#647c68);border-color:#6f9376;box-shadow:0 7px 0 #596e5d,0 15px 28px #5e70674a;color:white}
+.start-button:active{box-shadow:0 2px 0 #596e5d,0 8px 18px #5e70674a}
+.sound-choice{color:#756963}.sound-choice input{accent-color:#78907a}.skip-start{color:#806d67}.poster-caption{color:#685d54;text-shadow:0 1px 8px white;max-width:88vw;line-height:1.35;text-align:center;font-size:10px;letter-spacing:.05em;margin:0 auto max(16px,env(safe-area-inset-bottom))}
+.hud-chip,.hud-skip{background:#fffaf1e8;border-color:#f4dfd0;color:#65584c}
+.hud-progress{color:#756653}.progress-track{background:#fffaf3}.progress-track #progress-fill{background:linear-gradient(90deg,#93b99a,#d79a9f)}
+#jump-btn{background:radial-gradient(circle at 35% 25%,#fffefa,#fbe7e2);color:#80635f;border-color:#fffaf8;box-shadow:0 0 0 5px #bf9d9b49,0 7px 0 #d1a4a1,0 18px 26px #7f63594a}
+.jump-hint{color:#756452;text-shadow:0 1px 8px #fff}
+#invitation-view{background:linear-gradient(#e8d8d2 0%,#f5ebe4 38%,#fffaf4 100%)}
+.invite-hero{background:radial-gradient(circle at 75% 12%,#fff8e3 0 12%,transparent 20%),linear-gradient(150deg,#e6c4c5,#f6e7d1 78%)}
+.invite-title{color:#5c6054}.invite-hero small{color:#92736e}.invite-kind{color:#91776f}
+.detail-item{background:#f6eee6}.invite-card{background:#fffdf8}.detail-label{color:#99786f}.invite-actions a{background:#f9f2e9}.invite-actions a:hover{background:#f2e5d8}
+@media(max-height:690px){.start-title{font-size:clamp(32px,7vh,56px)}.start-content{padding:15px}.start-subtitle{font-size:13px;margin:8px auto}.start-button{padding:12px;margin:10px auto}.start-event{padding:7px 12px}.poster-caption{display:none}}
+@media(max-width:430px){.poster-caption{display:none}.hud-progress{top:69px;width:40vw}.hud-chip{padding:8px 10px}.hud-skip{padding:10px 11px}.hud-top{padding:12px}.start-content{width:94%}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -102,20 +131,20 @@ button:focus-visible,a:focus-visible { outline:3px solid #458cb1; outline-offset
 <body>
 <div id="game-container"></div>
 <div id="game-hud" aria-label="Controles del videojuego">
- <div class="hud-top"><div class="hud-chip" id="hud-count">⭐ <strong>0 / 10</strong></div><button class="hud-skip" id="hud-skip" type="button">Ver invitación ↗</button></div>
- <div class="hud-progress"><span class="hud-progress-label">EL CAMINO A LA FIESTA</span><div class="progress-track"><div id="progress-fill"></div></div></div>
+ <div class="hud-top"><div class="hud-chip" id="hud-count">💗 <strong>0 / 10</strong></div><button class="hud-skip" id="hud-skip" type="button">Ver invitación ↗</button></div>
+ <div class="hud-progress"><span class="hud-progress-label">EL CAMINO AL SÍ</span><div class="progress-track"><div id="progress-fill"></div></div></div>
  <div class="jump-wrap"><button id="jump-btn" type="button" aria-label="Saltar"><span class="jump-symbol">↑</span><span class="jump-word">SALTAR</span></button><span class="jump-hint">TOCÁ O USÁ ESPACIO</span></div>
 </div>
 <div id="invitation-view">
-  <div class="invite-hero"><div class="invite-spark">✦ ✧ ✦</div><small>¡Lo lograste!</small><h1 class="invite-title" id="invite-names"></h1><div class="invite-kind" id="invite-kind"></div></div>
+  <div class="invite-hero"><div class="invite-spark">♡ ✦ ♡</div><small>JUNTOS, HASTA EL FINAL</small><h1 class="invite-title" id="invite-names"></h1><div class="invite-kind" id="invite-kind"></div></div>
   <div class="invite-card">
-    <p class="invite-lead">Un día especial se disfruta más con vos.<br>Acá están todos los detalles para festejar juntos.</p>
+    <p class="invite-lead">El mejor camino es el que recorremos juntos.<br>Ahora sí, queremos invitarte a celebrar con nosotros.</p>
     <div class="detail-grid" id="invite-details"></div>
     <div id="info-extra"></div>
     <section class="rsvp-section"><h2 class="section-title">¿Nos acompañás? 💌</h2><div id="rsvp-form-estado"></div></section>
   </div>
   <button id="volver-jugar" type="button">↶ Volver a jugar</button>
-  <div class="invite-footer">Hecho para celebrar los momentos que importan ✨</div>
+  <div class="invite-footer">Un encuentro especial merece una invitación única ♡</div>
 </div>
 
 <script>
@@ -137,7 +166,9 @@ const CATALOGO_DEMO = {
     hora: "19:30 hs",
     lugar: "Salón Jacarandá",
     direccion: "Av. Libertador 1234, CABA",
-    objeto: "frutilla",
+    objeto: "corazon",
+    personaje1Url: "personaje-cabeza.png",
+    personaje2Url: "personaje-pareja.png",
     fechaHoraIso: "2027-03-14T19:30:00",
     dressCode: "Elegante sport",
     regaloTexto: "Si querés hacernos un regalo, preferimos una ayuda para la luna de miel:",
@@ -196,6 +227,8 @@ function normalizarInvitacion(fila) {
     regaloTexto: fila.regalo_texto || null,
     regaloDatos: fila.regalo_datos || null,
     incluyeJuego: fila.incluye_juego !== false,
+    personaje1Url: fila.personaje_1_url || "personaje-cabeza.png",
+    personaje2Url: fila.personaje_2_url || "",
   };
 }
 
@@ -203,6 +236,7 @@ async function cargarInvitacion(id) {
   // 1) Buscarla en la base de datos real (Supabase) — esta es la fuente
   //    de verdad: acá es donde van a vivir las invitaciones de verdad.
   try {
+    if (!clienteDB) throw new Error('Supabase no disponible');
     const { data, error } = await clienteDB
       .from('invitaciones')
       .select('*')
@@ -395,6 +429,7 @@ function actualizarCuentaRegresiva() {
 
 async function generarQRDataURL(texto) {
   try {
+    if (typeof QRCode === 'undefined') return null;
     return await QRCode.toDataURL(texto, { width: 240, margin: 1, color: { dark: '#1a1a2e', light: '#ffffff' } });
   } catch (error) {
     console.error('No se pudo generar el código QR:', error);
@@ -404,295 +439,312 @@ async function generarQRDataURL(texto) {
 
 
 /* =============================================================
-   NUEVO DISEÑO · DESIERTO ILUSTRADO
-   Paisaje, personaje, cactus, botones y pantallas rediseñadas.
-   Los datos del evento, Supabase y el RSVP siguen siendo reutilizables.
+   DISEÑO MAESTRO · CAMINO AL ALTAR
+   Un mismo motor para futuras plantillas. En esta versión los
+   recursos del jardín se dibujan con Canvas. No usa OpenAI.
    ============================================================= */
-const VELOCIDAD_SCROLL = 275;
-const OBJETOS_PARA_GANAR = 10;
-const DISTANCIA_NIVEL = 13500; // ~49 segundos de recorrido
+const CONFIG_PLANTILLA = Object.freeze({
+  id: 'jardin-boda',
+  velocidad: 265,                    // px/segundo
+  longitud: 7950,                   // unos 30 segundos
+  objetosParaObjetivo: 10,          // objetivo amable, no bloquea el final
+  espaciadoColeccionables: 285,     // mucho más frecuentes que en el desierto
+  inicioObstaculos: 780,
+  espaciadoObstaculos: 535
+});
+const VELOCIDAD_SCROLL = CONFIG_PLANTILLA.velocidad;
+const OBJETOS_PARA_GANAR = CONFIG_PLANTILLA.objetosParaObjetivo;
+const DISTANCIA_NIVEL = CONFIG_PLANTILLA.longitud;
 let instanciaJuego = null;
-
-const $ = (id) => document.getElementById(id);
-const escaparHTML = (valor) => String(valor ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $ = id => document.getElementById(id);
+const escaparHTML = valor => String(valor ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const vistaPrevia = {p1:null,p2:null};
 
 function animarInicio() {
   return new Promise(resolve => {
-    const contenedor = $('game-container');
-    contenedor.innerHTML = `
+    const svgRamo = `<svg viewBox="0 0 150 170" width="100%" height="100%" aria-hidden="true">
+      <g fill="none" stroke="#719174" stroke-width="5" stroke-linecap="round">
+      <path d="M14 160 Q55 105 78 36M22 160Q48 129 39 70M29 166Q91 100 119 82"/></g>
+      <g fill="#90ae8c"><ellipse cx="50" cy="98" rx="12" ry="24" transform="rotate(-35 50 98)"/><ellipse cx="78" cy="117" rx="12" ry="23" transform="rotate(45 78 117)"/><ellipse cx="92" cy="64" rx="10" ry="20" transform="rotate(-40 92 64)"/></g>
+      <g fill="#f9f6ef" stroke="#dba5aa" stroke-width="2"><circle cx="76" cy="33" r="21"/><circle cx="39" cy="68" r="19"/><circle cx="119" cy="83" r="19"/></g>
+      <g fill="#d58b99"><circle cx="76" cy="33" r="7"/><circle cx="39" cy="68" r="6"/><circle cx="119" cy="83" r="6"/></g></svg>`;
+    const modoPrueba = new URLSearchParams(location.search).has('test');
+    $('game-container').innerHTML = `
       <div class="start-screen">
-        <div class="poster-glow"></div>
-        <div class="poster-dune"></div><div class="poster-dune two"></div><div class="poster-dune three"></div>
-        <svg class="poster-cactus" viewBox="0 0 140 190" aria-hidden="true"><path d="M70 183V45M70 98H48Q28 98 28 76V59M70 129h23q25 0 25-23V83" stroke="#377262" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M62 178V47M50 89Q38 85 37 64M85 120q22-4 24-31" stroke="#64a17c" stroke-width="8" stroke-linecap="round" fill="none"/></svg>
-        <svg class="poster-cactus right" viewBox="0 0 140 190" aria-hidden="true"><path d="M70 183V45M70 98H48Q28 98 28 76V59M70 129h23q25 0 25-23V83" stroke="#47735c" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M62 178V47M50 89Q38 85 37 64M85 120q22-4 24-31" stroke="#76a47b" stroke-width="8" stroke-linecap="round" fill="none"/></svg>
+        <div class="poster-glow"></div><div class="poster-flowers"></div>
+        <div class="poster-bouquet left">${svgRamo}</div>
+        <div class="poster-bouquet right">${svgRamo}</div>
         <main class="start-content">
-          <span class="start-event">✦ ${escaparHTML(INVITACION.tipoEvento)} de ${escaparHTML(INVITACION.nombres)} ✦</span>
-          <div class="eyebrow" style="margin-top:24px">UNA INVITACIÓN DIFERENTE</div>
-          <h1 class="start-title">La aventura <span>comienza acá.</span></h1>
-          <p class="start-subtitle">Atravesá el desierto, saltá los cactus y juntá tesoros. Al final del camino te espera una sorpresa especial.</p>
-          <button class="start-button" id="comenzar-juego" type="button">¡Empezar aventura! <span aria-hidden="true">➜</span></button>
-          <label class="sound-choice"><input type="checkbox" id="pref-sonido" checked> Jugar con música</label>
-          <button class="skip-start" id="omitir-juego" type="button">Prefiero ver la invitación directamente ↗</button>
+          <span class="start-event">♡ ${escaparHTML(INVITACION.tipoEvento)} · ${escaparHTML(INVITACION.nombres)} ♡</span>
+          <div class="eyebrow" style="margin-top:22px">UNA HISTORIA POR CELEBRAR</div>
+          <h1 class="start-title">Un camino <span>hasta el sí.</span></h1>
+          <p class="start-subtitle">Un pequeño jardín, flores por descubrir y una persona muy especial esperándote al final.</p>
+          ${modoPrueba ? `<div style="text-align:left;margin:10px auto 0;max-width:330px;font-size:12px;color:#715f5c">
+             <strong>PRUEBA SIN COSTO DE IA · PNG descargados</strong>
+             <label style="display:block;margin-top:6px">Protagonista 1 <input id="png-p1" type="file" accept="image/png,image/webp" style="width:100%"></label>
+             <label style="display:block;margin-top:5px">Protagonista 2 <input id="png-p2" type="file" accept="image/png,image/webp" style="width:100%"></label>
+             </div>` : ''}
+          <button class="start-button" id="comenzar-juego" type="button">Empezar nuestra aventura <span aria-hidden="true">↗</span></button>
+          <label class="sound-choice"><input type="checkbox" id="pref-sonido"> Jugar con música</label>
+          <button class="skip-start" id="omitir-juego" type="button">Ver invitación sin jugar →</button>
         </main>
-        <p class="poster-caption">UN CAMINO CORTITO A UN GRAN FESTEJO · 50 SEGUNDOS</p>
+        <p class="poster-caption">UNA AVENTURA CORTITA · UN ENCUENTRO INOLVIDABLE</p>
       </div>`;
-    $('comenzar-juego').addEventListener('click', () => {
-      const audio = $('pref-sonido').checked;
-      if (audio) { try { musicaJuego = crearMusicaJuego(); } catch(e) { console.warn('Audio no disponible:',e); } }
-      SONIDO_ACTIVADO = audio && !!musicaJuego;
+    $('comenzar-juego').addEventListener('click',()=>{
+      if(modoPrueba){
+        ['p1','p2'].forEach(id=>{
+          const f=$('png-'+id).files[0];
+          if(vistaPrevia[id]) URL.revokeObjectURL(vistaPrevia[id]);
+          vistaPrevia[id]=f ? URL.createObjectURL(f) : null;
+        });
+      }
+      const audio=$('pref-sonido').checked;
+      if(audio){try{musicaJuego=crearMusicaJuego();}catch(e){console.warn('Audio no disponible',e)}}
+      SONIDO_ACTIVADO=audio&&!!musicaJuego;
       resolve(true);
-    }, {once:true});
-    $('omitir-juego').addEventListener('click', () => resolve(false), {once:true});
+    },{once:true});
+    $('omitir-juego').addEventListener('click',()=>resolve(false),{once:true});
   });
 }
 
-/* Texturas dibujadas con canvas: no requieren bajar sprites de internet. */
-function crearTextura(scene, key, width, height, dibujar) {
-  if (scene.textures.exists(key)) scene.textures.remove(key);
-  const texture = scene.textures.createCanvas(key, Math.ceil(width), Math.ceil(height));
-  const ctx = texture.getContext();
-  dibujar(ctx, Math.ceil(width), Math.ceil(height));
-  texture.refresh();
-  return key;
+/* Canvas dibuja el kit visual. No depende de fotografías externas. */
+function crearTextura(scene,key,w,h,dibujo){
+  if(scene.textures.exists(key)) scene.textures.remove(key);
+  const t=scene.textures.createCanvas(key,Math.ceil(w),Math.ceil(h));
+  const c=t.getContext();dibujo(c,Math.ceil(w),Math.ceil(h));t.refresh();return key;
 }
-const redondear = (ctx, x, y, w, h, r, fill, stroke) => {
-  ctx.beginPath(); ctx.roundRect(x,y,w,h,r);
-  if(fill){ctx.fillStyle=fill;ctx.fill();}
-  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();}
-};
-function colina(ctx, anchura, alto, base, amplitud, color, fase, frecuencia=1) {
-  ctx.beginPath(); ctx.moveTo(0, alto);
-  for(let x=0;x<=anchura;x+=12) {
-    const v=base + Math.sin(x/anchura*2*Math.PI*frecuencia+fase)*amplitud + Math.sin(x/anchura*4*Math.PI*frecuencia+fase*.5)*amplitud*.28;
-    ctx.lineTo(x,v);
-  }
-  ctx.lineTo(anchura,alto); ctx.closePath(); ctx.fillStyle=color;ctx.fill();
+function circulo(c,x,y,r,col){c.fillStyle=col;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill()}
+function hoja(c,x,y,ancho,alto,rot,color){c.save();c.translate(x,y);c.rotate(rot);c.fillStyle=color;c.beginPath();c.ellipse(0,0,ancho,alto,0,0,Math.PI*2);c.fill();c.restore()}
+function flor(c,x,y,r=14,color='#fff9f2',centro='#dcaa7c'){
+  for(let k=0;k<5;k++){const a=k*Math.PI*2/5;circulo(c,x+Math.cos(a)*r*.63,y+Math.sin(a)*r*.63,r*.51,color)}
+  circulo(c,x,y,r*.38,centro);
 }
-function dibujarEscenario(scene, W, H, suelo) {
-  const L=1800;
-  crearTextura(scene,'sky',W,H,(c,w,h)=>{
-    const g=c.createLinearGradient(0,0,0,h); g.addColorStop(0,'#ffe6ba');g.addColorStop(.42,'#ffc79d');g.addColorStop(1,'#f5b17c');c.fillStyle=g;c.fillRect(0,0,w,h);
-    const sx=w*.78,sy=h*.22,rr=Math.min(w*.25,145);
-    const glow=c.createRadialGradient(sx,sy,5,sx,sy,rr*2.3);glow.addColorStop(0,'#fff9c9aa');glow.addColorStop(.53,'#ffe4a899');glow.addColorStop(1,'#ffddab00');c.fillStyle=glow;c.fillRect(sx-rr*2.5,sy-rr*2.5,rr*5,rr*5);
-    c.beginPath();c.arc(sx,sy,rr*.52,0,Math.PI*2);c.fillStyle='#ffefd0';c.fill();
-    c.strokeStyle='#fff4df8c';c.lineWidth=3;
-    for(let i=0;i<6;i++){let x=(i*.22+.05)*w,y=(.15+(i%3)*.1)*h;c.beginPath();c.moveTo(x,y);c.quadraticCurveTo(x+35,y-10,x+75,y);c.stroke();}
-    // Finas motas del aire, siempre en segundo plano.
-    for(let i=0;i<65;i++){let x=(i*131.7)%w,y=((i*83.3)%Math.max(20,suelo));c.fillStyle='#fff9dd45';c.fillRect(x,y,2,2);}
+function crearJardin(scene,W,H,suelo){
+  const ancho=1600;
+  crearTextura(scene,'jardin-cielo',Math.max(400,W),Math.max(400,H),(c,w,h)=>{
+    const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#fff1e5');g.addColorStop(.57,'#f4dadd');g.addColorStop(1,'#d9dbc9');c.fillStyle=g;c.fillRect(0,0,w,h);
+    const sx=w*.77,sy=h*.18;
+    const luz=c.createRadialGradient(sx,sy,8,sx,sy,Math.min(w,h)*.34);luz.addColorStop(0,'#fffcef');luz.addColorStop(.38,'#fff9e8aa');luz.addColorStop(1,'#ffffff00');c.fillStyle=luz;c.fillRect(0,0,w,h);
+    for(let i=0;i<5;i++){const x=(i*.31+.12)*w,y=(.15+(i%3)*.12)*h;circulo(c,x,y,24,'#fff8f28c');circulo(c,x+26,y+5,17,'#fff8f28c')}
   });
-  crearTextura(scene,'mesas',L,H,(c,w,h)=>{
-    const horizon=suelo-Math.min(h*.31,230);
-    for(let i=-1;i<7;i++){
-      const x=i*342+70, y=horizon+(i%2)*23, mw=180+(i%3)*30, mh=80+(i%3)*28;
-      c.fillStyle='#c98273a1';c.beginPath();c.moveTo(x,y+mh);c.lineTo(x+20,y+25);c.quadraticCurveTo(x+29,y+16,x+48,y+16);c.lineTo(x+68,y+9);c.lineTo(x+mw-43,y+9);c.lineTo(x+mw-24,y+24);c.lineTo(x+mw,y+mh);c.closePath();c.fill();
-      c.fillStyle='#f7b49f68';c.fillRect(x+53,y+17,mw-110,6);
-      c.strokeStyle='#a9686270';c.lineWidth=4;c.beginPath();c.moveTo(x+25,y+55);c.lineTo(x+mw-22,y+55);c.stroke();
+  crearTextura(scene,'jardin-lejos',ancho,Math.max(180,H),(c,w,h)=>{
+    const horiz=Math.max(90,suelo-215);
+    for(let i=-1;i<17;i++){
+      const x=i*110+35,r=75+(i%3)*20;
+      c.fillStyle=i%2?'#b4c4ad':'#b9c9b2';c.beginPath();c.moveTo(x-r,h);c.quadraticCurveTo(x-r,horiz+40,x,horiz-r*.13);c.quadraticCurveTo(x+r,horiz+45,x+r,h);c.fill();
     }
-    colina(c,w,h,suelo-115,35,'#dc987e',1.3);
+    c.fillStyle='#b7c9ab';c.fillRect(0,suelo-84,w,100);
   });
-  crearTextura(scene,'dunas-lejos',L,H,(c,w,h)=>{
-    colina(c,w,h,suelo-104,44,'#e7ac85',.35);
-    for(let i=0;i<19;i++){
-      let x=70+i*102,y=suelo-99+Math.sin(x/w*2*Math.PI+.35)*44;
-      c.strokeStyle='#8e956f70';c.lineWidth=5;c.lineCap='round';c.beginPath();c.moveTo(x,y+5);c.lineTo(x,y-18);c.moveTo(x,y-6);c.lineTo(x-10,y-6);c.lineTo(x-10,y-14);c.stroke();
+  crearTextura(scene,'jardin-arboles',ancho,Math.max(180,H),(c,w,h)=>{
+    for(let i=0;i<12;i++){
+      const x=70+i*143+(i%3)*8;
+      c.fillStyle='#ab9a83';c.fillRect(x-7,suelo-207,15,155);
+      for(let j=0;j<5;j++){const px=x+Math.cos(j*1.25)*35,py=suelo-190+Math.sin(j*2.17)*27;circulo(c,px,py,52,j%2?'#9fbba1':'#8eac95')}
+      for(let j=0;j<7;j++){let t=j*1.88+i;flor(c,x+Math.cos(t)*37,suelo-197+Math.sin(t)*37,4,'#f7e8e3','#f9deb2')}
     }
   });
-  crearTextura(scene,'dunas-cerca',L,H,(c,w,h)=>{
-    colina(c,w,h,suelo-42,30,'#edb27d',.7);
-    for(let i=0;i<28;i++) {
-      const x=(i*77+33)%w, y=suelo-23+Math.sin(x/w*2*Math.PI+.7)*30;
-      c.strokeStyle='#bd8c60a6';c.lineWidth=2;c.beginPath();c.moveTo(x,y);c.lineTo(x-7,y-6);c.moveTo(x,y);c.lineTo(x+7,y-5);c.stroke();
+  crearTextura(scene,'jardin-jardineras',ancho,Math.max(180,H),(c,w,h)=>{
+    c.fillStyle='#9eb18d';c.fillRect(0,suelo-64,w,84);
+    for(let i=0;i<43;i++){
+      let x=20+i*38;
+      c.strokeStyle='#789875';c.lineWidth=3;c.beginPath();c.moveTo(x,suelo-18);c.lineTo(x-6,suelo-65-(i%3)*7);c.stroke();
+      hoja(c,x-9,suelo-43,7,14,-.6,'#7ca17c');hoja(c,x+3,suelo-38,6,13,.6,'#93b794');
+      flor(c,x-6,suelo-65-(i%3)*7,7,i%4===0?'#f3c1c1':'#fff6ed',i%3?'#d49f7a':'#c78e9d');
     }
   });
-  crearTextura(scene,'arena',L,Math.max(140,H-suelo),(c,w,h)=>{
-    const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#e9ad72');g.addColorStop(.32,'#d99b66');g.addColorStop(1,'#b87457');c.fillStyle=g;c.fillRect(0,0,w,h);
-    c.strokeStyle='#ffdfaa';c.lineWidth=6;c.beginPath();c.moveTo(0,2);c.lineTo(w,2);c.stroke();
-    c.strokeStyle='#f9d39e66';c.lineWidth=2;
-    for(let i=0;i<85;i++) {let x=i*43.7,y=20+(i*37.1)%(h-20);c.beginPath();c.moveTo(x,y);c.quadraticCurveTo(x+17,y-4,x+36,y);c.stroke();}
-    for(let i=0;i<105;i++) {let x=(i*137.1)%w,y=(i*53.3)%h;c.fillStyle=i%2?'#bd7c5566':'#fff0bb8a';c.beginPath();c.ellipse(x,y,2+(i%4),1+(i%3)*.6,0,0,Math.PI*2);c.fill();}
+  crearTextura(scene,'jardin-camino',ancho,Math.max(160,H-suelo),(c,w,h)=>{
+    const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#e4cdb7');g.addColorStop(1,'#c8ad97');c.fillStyle=g;c.fillRect(0,0,w,h);
+    c.fillStyle='#fdf2e3';c.fillRect(0,0,w,5);
+    for(let i=0;i<38;i++){
+      const x=i*46+12,y=23+(i%4)*22;
+      c.strokeStyle='#f9e7d055';c.lineWidth=2;c.beginPath();c.moveTo(x,y);c.quadraticCurveTo(x+10,y-3,x+20,y);c.stroke();
+    }
+    for(let i=0;i<40;i++)circulo(c,(i*119)%w,(i*47)%h,2.2,i%2?'#b9958665':'#f9e9dbab');
   });
-  const layer=(key,depth,ratio)=>scene.add.tileSprite(0,0,W,H,key).setOrigin(0).setScrollFactor(0).setDepth(depth).setData('parallax',ratio);
-  const sky=scene.add.image(0,0,'sky').setOrigin(0).setDepth(-20);
-  const mesas=layer('mesas',-12,.11), far=layer('dunas-lejos',-9,.25),near=layer('dunas-cerca',-7,.44);
-  const floor=scene.add.tileSprite(0,suelo,W,Math.max(H-suelo,140),'arena').setOrigin(0).setDepth(-2);
-  return {sky,mesas,far,near,floor};
+  const sky=scene.add.image(0,0,'jardin-cielo').setOrigin(0).setScrollFactor(0).setDepth(-22);
+  const tile=(key,depth,ratio,height=H,y=0)=>scene.add.tileSprite(0,y,W,height,key).setOrigin(0).setScrollFactor(0).setDepth(depth).setData('parallax',ratio);
+  const far=tile('jardin-lejos',-18,.12),trees=tile('jardin-arboles',-15,.24),near=tile('jardin-jardineras',-11,.47);
+  const floor=tile('jardin-camino',-4,1,Math.max(160,H-suelo),suelo);
+  return {sky,far,trees,near,floor};
 }
-function crearCactus(scene) {
-  const cactus=(key,width,height,variacion)=>crearTextura(scene,key,width,height,(c,w,h)=>{
-    c.translate(w*.51,0); c.lineCap='round';c.lineJoin='round';
-    const draw=(stroke,line)=>{c.lineWidth=line;c.strokeStyle=stroke;c.beginPath();c.moveTo(0,h*.92);c.lineTo(-3,h*.18);c.quadraticCurveTo(-2,h*.11,4,h*.1);c.moveTo(-2,h*.60);c.lineTo(-w*.23,h*.6);c.quadraticCurveTo(-w*.34,h*.6,-w*.34,h*.47);c.lineTo(-w*.34,h*.35);c.moveTo(1,h*.73);c.lineTo(w*.24,h*.73);c.quadraticCurveTo(w*.35,h*.73,w*.35,h*.6);c.lineTo(w*.35,h*.45);c.stroke();};
-    c.shadowColor='#744b3670';c.shadowBlur=13;c.shadowOffsetY=6;draw('#366851',w*.20);c.shadowColor='transparent';draw(variacion?'#56886a':'#3e866d',w*.145);draw('#80b38a77',w*.046);
-    c.strokeStyle='#d6ddb277';c.lineWidth=1.6;
-    for(let i=0;i<9;i++){const y=h*(.22+i*.073);c.beginPath();c.moveTo(-w*.055,y);c.lineTo(-w*.105,y-4);c.moveTo(w*.04,y+2);c.lineTo(w*.087,y-2);c.stroke();}
-    if(variacion){c.fillStyle='#f2b09e';for(let i=0;i<3;i++){c.beginPath();c.arc(-5+i*5,h*.1-(i%2)*3,3.5,0,Math.PI*2);c.fill();}}
+function crearElementosJardin(scene){
+  crearTextura(scene,'flor-coleccionable',74,74,(c,w,h)=>{
+    const grad=c.createRadialGradient(36,35,2,36,35,35);grad.addColorStop(0,'#fff8edbb');grad.addColorStop(1,'#fff6e100');c.fillStyle=grad;c.fillRect(0,0,w,h);
+    flor(c,36,36,22,'#fdf8ef','#dba278');
+    c.strokeStyle='#e5b5a4';c.lineWidth=2;c.beginPath();c.arc(36,36,24,0,Math.PI*2);c.stroke();
   });
-  cactus('cactus-grande',120,154,false);cactus('cactus-chico',100,124,true);
-}
-function crearTesoro(scene) {
-  const cosa=EMOJI_OBJETO||'⭐';
-  crearTextura(scene,'tesoro',80,80,(c,w,h)=>{
-    const glow=c.createRadialGradient(40,40,5,40,40,38);glow.addColorStop(0,'#fffbd4bb');glow.addColorStop(1,'#fffac900');c.fillStyle=glow;c.fillRect(0,0,w,h);
-    c.shadowColor='#a66c34aa';c.shadowBlur=10;c.shadowOffsetY=4;c.beginPath();c.arc(40,40,26,0,Math.PI*2);const grad=c.createLinearGradient(20,15,62,65);grad.addColorStop(0,'#ffe7a0');grad.addColorStop(.5,'#fbc45f');grad.addColorStop(1,'#e7983e');c.fillStyle=grad;c.fill();c.shadowColor='transparent';c.strokeStyle='#fff3ba';c.lineWidth=4;c.stroke();
-    c.font='29px "Apple Color Emoji","Segoe UI Emoji",sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(cosa,40,41);
-    c.fillStyle='#ffffffcc';c.beginPath();c.ellipse(26,23,6,2,-.7,0,Math.PI*2);c.fill();
+  function maceta(key,color){crearTextura(scene,key,116,118,(c,w,h)=>{
+    c.fillStyle='#9dba90';for(let i=0;i<7;i++){let x=58+Math.cos(i*1.7)*36,y=45+Math.sin(i*2.1)*20;hoja(c,x,y,15,26,i*.65,'#7eaa86');flor(c,x,y-19,10,i%2?'#f6cfce':'#fff7ee','#ddb379')}
+    c.fillStyle=color;c.beginPath();c.moveTo(20,62);c.lineTo(95,62);c.lineTo(83,111);c.lineTo(35,111);c.closePath();c.fill();
+    c.strokeStyle='#fffaf080';c.lineWidth=5;c.beginPath();c.moveTo(27,70);c.lineTo(88,70);c.stroke();
+    c.fillStyle='#a37f70';c.fillRect(22,57,70,8);
+  })}
+  maceta('maceta-rosa','#c9978e');maceta('maceta-verde','#91a99a');
+  crearTextura(scene,'arco-boda',400,330,(c,w,h)=>{
+    // Arco floral que enmarca a los dos protagonistas
+    c.strokeStyle='#9b9f82';c.lineWidth=15;c.lineCap='round';c.beginPath();c.moveTo(66,322);c.lineTo(66,116);c.bezierCurveTo(66,21,334,21,334,116);c.lineTo(334,322);c.stroke();
+    c.strokeStyle='#f9f0de';c.lineWidth=7;c.beginPath();c.moveTo(69,315);c.lineTo(69,117);c.bezierCurveTo(69,28,331,28,331,117);c.lineTo(331,315);c.stroke();
+    for(let i=0;i<26;i++){
+      const a=Math.PI+(Math.PI*i/25),x=200+132*Math.cos(a),y=123+85*Math.sin(a);
+      hoja(c,x,y,14,29,a+.6,i%2?'#7f9b7c':'#a2b89b');
+      if(i%3===0)flor(c,x,y,14,i%2?'#fff7ef':'#f3d4d4','#dab18e');
+    }
+    for(let i=0;i<9;i++){const x=62+(i%2)*271,y=135+(i%5)*36;hoja(c,x,y,10,18,i,'#78987d');if(i%2===0)flor(c,x+4,y-7,8,'#fbf3e9','#e1b599')}
   });
-}
-function crearPersonajeIlustrado(scene) {
-  crearTextura(scene,'aventurero',155,206,(c,w,h)=>{
-    c.lineCap='round';c.lineJoin='round';
-    // sombra de perfil, piernas y zapatos
-    c.strokeStyle='#4e514f';c.lineWidth=17;c.beginPath();c.moveTo(72,148);c.lineTo(58,182);c.moveTo(95,149);c.lineTo(103,182);c.stroke();
-    c.strokeStyle='#f7eee1';c.lineWidth=14;c.beginPath();c.moveTo(58,184);c.lineTo(42,187);c.moveTo(104,184);c.lineTo(124,187);c.stroke();
-    c.strokeStyle='#a46555';c.lineWidth=3;c.beginPath();c.moveTo(43,190);c.lineTo(59,190);c.moveTo(108,190);c.lineTo(126,190);c.stroke();
-    // mochila lateral
-    redondear(c,27,82,45,70,18,'#e9a052','#b37643');
-    redondear(c,36,94,33,26,10,'#eeba70');
-    // torso y mangas
-    c.beginPath();c.moveTo(53,88);c.quadraticCurveTo(78,74,101,89);c.lineTo(114,150);c.quadraticCurveTo(83,166,50,150);c.closePath();
-    const shirt=c.createLinearGradient(50,90,108,151);shirt.addColorStop(0,'#ffb88c');shirt.addColorStop(1,'#dd765e');c.fillStyle=shirt;c.fill();c.strokeStyle='#a65f51';c.lineWidth=3;c.stroke();
-    c.strokeStyle='#f1b18c';c.lineWidth=13;c.beginPath();c.moveTo(54,100);c.lineTo(39,126);c.moveTo(104,101);c.lineTo(125,121);c.stroke();
-    c.fillStyle='#f5c1a1';c.beginPath();c.arc(38,129,8,0,Math.PI*2);c.arc(126,124,8,0,Math.PI*2);c.fill();
-    // cabeza y pelo
-    c.fillStyle='#543c34';c.beginPath();c.ellipse(80,46,42,46,-.06,0,Math.PI*2);c.fill();
-    c.beginPath();c.ellipse(80,55,35,36,0,0,Math.PI*2);c.fillStyle='#f4bd98';c.fill();
-    c.fillStyle='#533832';c.beginPath();c.moveTo(44,49);c.quadraticCurveTo(34,0,82,10);c.quadraticCurveTo(125,6,116,54);c.quadraticCurveTo(111,38,104,32);c.quadraticCurveTo(81,48,63,37);c.quadraticCurveTo(56,47,44,49);c.fill();
-    c.fillStyle='#3d322c';c.beginPath();c.arc(69,58,2.8,0,Math.PI*2);c.arc(94,58,2.8,0,Math.PI*2);c.fill();
-    c.strokeStyle='#b76556';c.lineWidth=2;c.beginPath();c.arc(81,69,8,.12,Math.PI-.12);c.stroke();
-    c.fillStyle='#e9917c99';c.beginPath();c.ellipse(56,68,8,4,0,0,Math.PI*2);c.ellipse(106,68,8,4,0,0,Math.PI*2);c.fill();
-    // pañuelo y sombrero de explorador
-    c.strokeStyle='#f8d271';c.lineWidth=8;c.beginPath();c.moveTo(62,91);c.quadraticCurveTo(83,101,102,91);c.stroke();
-    c.fillStyle='#fff1d0';c.beginPath();c.ellipse(79,27,52,11,0,0,Math.PI*2);c.fill();
-    c.fillStyle='#e6a866';c.beginPath();c.moveTo(47,23);c.lineTo(53,6);c.quadraticCurveTo(79,-3,107,6);c.lineTo(113,23);c.closePath();c.fill();
-    c.fillStyle='#bf7554';c.fillRect(49,19,61,6);
-    c.strokeStyle='#fff3d9';c.lineWidth=3;c.beginPath();c.moveTo(59,13);c.quadraticCurveTo(76,9,94,12);c.stroke();
+  // Marcador temporal. En el producto siempre irá el PNG personalizado.
+  crearTextura(scene,'pareja-pendiente',112,172,(c,w,h)=>{
+    c.fillStyle='#e8cfc1';circulo(c,56,34,24,'#ebc3ad');
+    c.fillStyle='#856e64';c.beginPath();c.arc(56,29,25,Math.PI,Math.PI*2);c.fill();
+    c.fillStyle='#f9f5ea';c.beginPath();c.moveTo(40,65);c.lineTo(72,65);c.lineTo(100,164);c.lineTo(13,164);c.closePath();c.fill();
+    c.strokeStyle='#d5b4ae';c.lineWidth=3;c.stroke();
+    c.fillStyle='#8c7974';c.font='bold 10px sans-serif';c.textAlign='center';c.fillText('DEMO',56,124);
+  });
+  crearTextura(scene,'avatar-demo',90,162,(c,w,h)=>{
+    circulo(c,45,29,23,'#ddad94');c.fillStyle='#5e493d';c.beginPath();c.arc(45,20,23,Math.PI,2*Math.PI);c.fill();
+    c.fillStyle='#9caaa0';c.fillRect(26,53,38,61);c.fillStyle='#666a68';c.fillRect(27,114,16,42);c.fillRect(49,114,16,42);
   });
 }
-function soltarPolvo(scene, x,y, cantidad=3) {
+function particulas(scene,x,y,cantidad=5,corazon=false){
   for(let i=0;i<cantidad;i++){
-    const cx=x-11+Math.random()*25;
-    const circle=scene.add.circle(cx,y,2+Math.random()*4,0xffe1b2,.6).setDepth(5);
-    scene.tweens.add({targets:circle,x:cx-15-Math.random()*23,y:y-5-Math.random()*26,alpha:0,scale:2,duration:480+Math.random()*210,onComplete:()=>circle.destroy()});
+    const a=Math.random()*Math.PI*2,d=22+Math.random()*48;
+    const p=corazon?scene.add.text(x,y,i%3?'♡':'♥',{fontFamily:'Fredoka',fontSize:`${16+Math.random()*12}px`,color:i%2?'#fff5ef':'#e09daa'}).setOrigin(.5).setDepth(14):scene.add.circle(x,y,2+Math.random()*4,i%2?0xfff4d9:0xf3c6c6,.85).setDepth(12);
+    scene.tweens.add({targets:p,x:x+Math.cos(a)*d,y:y+Math.sin(a)*d-15,alpha:0,scale:1.4,duration:480+Math.random()*380,onComplete:()=>p.destroy()});
   }
 }
-
+function assetPersonaje(i){
+  if(vistaPrevia[i])return vistaPrevia[i];
+  const dato=i==='p1'?INVITACION.personaje1Url:INVITACION.personaje2Url;
+  return dato || (i==='p1'?'personaje-cabeza.png':null);
+}
 class EscenaJuego extends Phaser.Scene {
-  constructor(){super('EscenaJuego');}
-  init(data){this.prevDistance=data?.distance||0;this.prevCount=data?.contador||0;}
+  constructor(){super('EscenaJuego')}
+  init(data){this.prevDistance=data?.distance||0;this.prevCount=data?.contador||0}
   preload(){
-    // Si ponés personaje-cabeza.png junto a este HTML, lo usamos.
-    // Si el archivo no está, aparece nuestro personaje ilustrado de ejemplo.
-    if(!this.textures.exists('personajeFoto'))this.load.image('personajeFoto','personaje-cabeza.png');
+    // Reutiliza los PNG del laboratorio sin llamar a OpenAI.
+    const p1=assetPersonaje('p1'),p2=assetPersonaje('p2');
+    if(p1&&!this.textures.exists('personajeFoto'))this.load.image('personajeFoto',p1);
+    if(p2&&!this.textures.exists('personajePareja'))this.load.image('personajePareja',p2);
   }
   create(){
     $('invitation-view').style.display='none';$('game-hud').style.display='block';
     this.W=this.scale.width;this.H=this.scale.height;
-    this.suelo=Math.round(this.H*(this.H<550?.77:.76));
-    this.suelo=Math.min(this.suelo,this.H-110);
-    this.playerHeight=Phaser.Math.Clamp(this.H*.245,106,176);
-    if(this.W<470)this.playerHeight=Phaser.Math.Clamp(this.W*.36,112,152);
-    this.personaX=Phaser.Math.Clamp(this.W*.22,90,Math.max(110,this.W*.25));
+    this.suelo=Math.min(Math.round(this.H*.76),this.H-115);
+    this.playerHeight=Phaser.Math.Clamp(this.H*.25,105,180);
+    if(this.W<470)this.playerHeight=Phaser.Math.Clamp(this.W*.34,105,146);
+    this.personaX=Math.min(Math.max(this.W*.22,76),240);
     this.distancia=this.prevDistance;this.contador=this.prevCount;
-    this.alturaSalto=0;this.velSalto=0;this.lastDust=0;this.hitCooldown=0;this.terminado=false;
-    this.capa=dibujarEscenario(this,this.W,this.H,this.suelo);
-    crearCactus(this);crearTesoro(this);crearPersonajeIlustrado(this);
-    const usarFoto=this.textures.exists('personajeFoto');
-    this.avatar=this.add.image(this.personaX,this.suelo,usarFoto?'personajeFoto':'aventurero').setOrigin(.5,1).setDepth(8);
-    // No deformamos la imagen real. Conservamos siempre su proporción.
-    const source=this.textures.get(this.avatar.texture.key).getSourceImage();
-    const ratio=source.width/source.height;const h=this.playerHeight;
-    this.avatar.setDisplaySize(h*ratio,h);
-    this.sombra=this.add.ellipse(this.personaX,this.suelo+6,h*.62,15,0x87553b,.25).setDepth(3);
-    this.obstaculos=[];
-    for(let x=1080,i=0;x<DISTANCIA_NIVEL-600;x+=900+(i%3)*135,i++) {
-      const grande=i%3!==1;
-      const height=grande?Phaser.Math.Clamp(this.playerHeight*.72,83,125):Phaser.Math.Clamp(this.playerHeight*.55,66,96);
-      const sprite=this.add.image(0,this.suelo,grande?'cactus-grande':'cactus-chico').setOrigin(.5,1).setDepth(4);
-      sprite.setDisplaySize(height*(grande?120/154:100/124),height);
-      this.obstaculos.push({x,sprite,height,toco:false});
-    }
+    this.alturaSalto=0;this.velSalto=0;this.hitCooldown=0;this.terminado=false;this.reunionActiva=false;this.lastDust=0;
+    this.capa=crearJardin(this,this.W,this.H,this.suelo);
+    crearElementosJardin(this);
+    const texP1=this.textures.exists('personajeFoto')?'personajeFoto':'avatar-demo';
+    this.avatar=this.add.image(this.personaX,this.suelo,texP1).setOrigin(.5,1).setDepth(8);
+    const dibujarProporcion=(img,altura)=>{const f=this.textures.get(img.texture.key).getSourceImage();const ratio=f.width/f.height;img.setDisplaySize(altura*ratio,altura)};
+    dibujarProporcion(this.avatar,this.playerHeight);
+    this.sombra=this.add.ellipse(this.personaX,this.suelo+4,this.playerHeight*.46,13,0x776858,.23).setDepth(1);
+    // Meta: arco y personaje 2 se acercan al avanzar, no aparecen por temporizador.
+    this.arco=this.add.image(-900,this.suelo+5,'arco-boda').setOrigin(.5,1).setDepth(3);
+    const alturaArco=Phaser.Math.Clamp(this.playerHeight*1.95,215,325);
+    this.arco.setDisplaySize(alturaArco*400/330,alturaArco);
+    const texP2=this.textures.exists('personajePareja')?'personajePareja':'pareja-pendiente';
+    this.pareja=this.add.image(-900,this.suelo,texP2).setOrigin(.5,1).setDepth(7);
+    dibujarProporcion(this.pareja,this.playerHeight*.99);
     this.objetos=[];
-    for(let i=0;i<24;i++){
-      const x=480+i*535;
-      const alto=i%4===0?this.playerHeight*1.12:this.playerHeight*.58;
-      const sprite=this.add.image(0,this.suelo-alto,'tesoro').setDepth(5).setScale(this.W<500?.78:.85);
-      const tomado=x<this.distancia-40;
-      if(tomado)sprite.setVisible(false);
-      this.objetos.push({x,alto,sprite,tomado});
+    for(let x=350,i=0;x<DISTANCIA_NIVEL-330;x+=CONFIG_PLANTILLA.espaciadoColeccionables,i++){
+      const alto=i%4===0?this.playerHeight*.99:this.playerHeight*.52;
+      const sprite=this.add.image(-200,this.suelo-alto,'flor-coleccionable').setDepth(6).setScale(this.W<500?.76:.83);
+      const tomado=x<this.distancia-35;
+      this.objetos.push({x,alto,sprite,tomado});if(tomado)sprite.setVisible(false);
+    }
+    this.obstaculos=[];
+    for(let x=CONFIG_PLANTILLA.inicioObstaculos,i=0;x<DISTANCIA_NIVEL-620;x+=CONFIG_PLANTILLA.espaciadoObstaculos+(i%3)*62,i++){
+      const grande=i%3!==1;
+      const height=grande?this.playerHeight*.67:this.playerHeight*.52;
+      const tex=i%2?'maceta-verde':'maceta-rosa';
+      const sprite=this.add.image(-200,this.suelo,tex).setOrigin(.5,1).setDepth(5);
+      sprite.setDisplaySize(height*116/118,height);
+      this.obstaculos.push({x,sprite,height,toco:false});
     }
     this.salto=()=>this.saltar();
     $('jump-btn').onclick=this.salto;
     $('hud-skip').onclick=()=>this.abrirInvitacion();
-    this.input.on('pointerdown',(pointer)=>{if(pointer.downElement?.tagName==='CANVAS')this.saltar();});
-    if(this.input.keyboard){this.input.keyboard.on('keydown-SPACE',this.salto);this.input.keyboard.on('keydown-UP',this.salto);}
+    this.input.on('pointerdown',p=>{if(p.downElement?.tagName==='CANVAS')this.saltar()});
+    if(this.input.keyboard){this.input.keyboard.on('keydown-SPACE',this.salto);this.input.keyboard.on('keydown-UP',this.salto)}
     this.onResize=()=>this.scene.restart({distance:this.distancia,contador:this.contador});
     this.scale.on('resize',this.onResize);
-    this.events.once('shutdown',()=>{this.scale.off('resize',this.onResize);$('jump-btn').onclick=null;$('hud-skip').onclick=null;if(this.input.keyboard){this.input.keyboard.off('keydown-SPACE',this.salto);this.input.keyboard.off('keydown-UP',this.salto);}});
-    $('hud-count').innerHTML=`${escaparHTML(EMOJI_OBJETO)} <strong>${Math.min(this.contador,10)} / ${OBJETOS_PARA_GANAR}</strong>`;
+    this.events.once('shutdown',()=>{this.scale.off('resize',this.onResize);$('jump-btn').onclick=null;$('hud-skip').onclick=null;if(this.input.keyboard){this.input.keyboard.off('keydown-SPACE',this.salto);this.input.keyboard.off('keydown-UP',this.salto)}});
+    this.actualizarContador();
     if(SONIDO_ACTIVADO&&musicaJuego)musicaJuego.iniciar();
   }
+  actualizarContador(){ $('hud-count').innerHTML=`🌸 <strong>${Math.min(this.contador,OBJETOS_PARA_GANAR)} / ${OBJETOS_PARA_GANAR}</strong>` }
   saltar(){
-    if(this.terminado||this.alturaSalto>1)return;
-    this.velSalto=-Math.max(625,this.playerHeight*4.75);
-    this.alturaSalto=2;
-    $('jump-btn').classList.add('pressed');setTimeout(()=>$('jump-btn').classList.remove('pressed'),130);
-    soltarPolvo(this,this.personaX-28,this.suelo,5);
+    if(this.terminado||this.reunionActiva||this.alturaSalto>1)return;
+    this.velSalto=-Math.max(540,this.playerHeight*4.2);this.alturaSalto=2;
+    $('jump-btn').classList.add('pressed');this.time.delayedCall(130,()=>$('jump-btn').classList.remove('pressed'));
+    particulas(this,this.personaX-18,this.suelo,4,false);
   }
-  tomar(obj){
-    obj.tomado=true;
-    this.contador++;
-    this.tweens.add({targets:obj.sprite,alpha:0,scale:1.5,y:obj.sprite.y-48,duration:240,ease:'Sine.Out',onComplete:()=>obj.sprite.setVisible(false)});
-    $('hud-count').innerHTML=`${escaparHTML(EMOJI_OBJETO)} <strong>${Math.min(this.contador,10)} / ${OBJETOS_PARA_GANAR}</strong>`;
-    for(let i=0;i<5;i++){
-      const spark=this.add.circle(this.personaX+8,this.suelo-this.playerHeight*.65-this.alturaSalto,2.5,0xffefb0).setDepth(9);
-      const a=i*Math.PI*2/5;
-      this.tweens.add({targets:spark,x:spark.x+Math.cos(a)*33,y:spark.y+Math.sin(a)*33,alpha:0,duration:350,onComplete:()=>spark.destroy()});
-    }
+  recolectar(obj){
+    obj.tomado=true;this.contador++;this.actualizarContador();
+    particulas(this,this.personaX+10,this.suelo-this.playerHeight*.62-this.alturaSalto,7,false);
+    this.tweens.add({targets:obj.sprite,alpha:0,scale:1.3,y:obj.sprite.y-35,duration:260,onComplete:()=>obj.sprite.setVisible(false)});
   }
-  tropezar(obstaculo){
-    obstaculo.toco=true;this.hitCooldown=.8;
-    this.avatar.setTint(0xf6a0a0);this.time.delayedCall(220,()=>this.avatar?.clearTint());
-    this.cameras.main.shake(140,.0024);soltarPolvo(this,this.personaX+25,this.suelo,6);
+  chocar(obstaculo){
+    obstaculo.toco=true;this.hitCooldown=.85;
+    this.avatar.setTint(0xffa6a8);this.time.delayedCall(260,()=>this.avatar?.clearTint());
+    this.cameras.main.shake(110,.002);particulas(this,this.personaX+16,this.suelo-24,4,false);
+  }
+  encuentro(){
+    if(this.reunionActiva||this.terminado)return;
+    this.reunionActiva=true;this.distancia=DISTANCIA_NIVEL;
+    this.avatar.setAngle(0);this.avatar.y=this.suelo;
+    $('jump-btn').style.visibility='hidden';
+    const mid=(this.avatar.x+this.pareja.x)/2;
+    const cartel=this.add.text(mid,Math.max(45,this.suelo-this.playerHeight*2.05),'¡Se encontraron! ♡',{
+      fontFamily:'Fredoka',fontSize:`${this.W<500?24:32}px`,fontStyle:'bold',color:'#865c62',stroke:'#fffaf1',strokeThickness:6
+    }).setOrigin(.5).setDepth(19).setAlpha(0);
+    this.tweens.add({targets:this.avatar,x:this.avatar.x+34,duration:680,ease:'Sine.InOut'});
+    this.tweens.add({targets:this.pareja,x:this.pareja.x-34,duration:680,ease:'Sine.InOut'});
+    this.tweens.add({targets:cartel,alpha:1,y:cartel.y-10,duration:600,ease:'Back.Out'});
+    for(let i=0;i<6;i++)this.time.delayedCall(i*260,()=>particulas(this,mid,this.suelo-this.playerHeight*.9,8,true));
+    this.time.delayedCall(2350,()=>this.abrirInvitacion());
   }
   abrirInvitacion(){
     if(this.terminado)return;this.terminado=true;
+    $('jump-btn').style.visibility='';
     if(musicaJuego)musicaJuego.detener();
-    $('game-hud').style.display='none';
-    this.scene.start('EscenaInvitacion');
+    $('game-hud').style.display='none';this.scene.start('EscenaInvitacion');
   }
   update(_time,delta){
-    if(this.terminado)return;
+    if(this.terminado||this.reunionActiva)return;
     const dt=Math.min(delta/1000,.045);
-    this.distancia+=VELOCIDAD_SCROLL*dt;
-    // salto y aterrizaje
+    this.distancia=Math.min(DISTANCIA_NIVEL,this.distancia+VELOCIDAD_SCROLL*dt);
     if(this.alturaSalto>0||this.velSalto!==0){
-      this.velSalto+=1850*dt;this.alturaSalto-=this.velSalto*dt;
-      if(this.alturaSalto<=0){this.alturaSalto=0;this.velSalto=0;soltarPolvo(this,this.personaX-18,this.suelo,3);}
+      this.velSalto+=1780*dt;this.alturaSalto-=this.velSalto*dt;
+      if(this.alturaSalto<=0){this.alturaSalto=0;this.velSalto=0;particulas(this,this.personaX-16,this.suelo,2,false)}
     }
-    this.avatar.y=this.suelo-this.alturaSalto+(this.alturaSalto===0?Math.sin(this.distancia*.075)*2.7:0);
-    this.avatar.angle=this.alturaSalto?Phaser.Math.Clamp(this.velSalto/120,-7,7):Math.sin(this.distancia*.07)*1.6;
-    this.sombra.scaleX=1+Math.min(this.alturaSalto/400,.5);this.sombra.alpha=Math.max(.08,.25-this.alturaSalto/900);
-    const sprites=[this.capa.mesas,this.capa.far,this.capa.near];
-    sprites.forEach(l=>l.tilePositionX=this.distancia*l.getData('parallax'));
-    this.capa.floor.tilePositionX=this.distancia*.97;
-    const absX=this.personaX;
-    this.objetos.forEach((obj,i)=>{
-      if(obj.tomado)return;
-      const visibleX=absX+obj.x-this.distancia;
-      obj.sprite.x=visibleX;
-      obj.sprite.y=this.suelo-obj.alto+Math.sin(this.distancia*.012+i)*7;
-      obj.sprite.visible=visibleX>-80&&visibleX<this.W+90;
-      const centroPersonaje=this.suelo-this.alturaSalto-this.playerHeight*.52;
-      if(Math.abs(visibleX-absX)<48&&Math.abs(centroPersonaje-obj.sprite.y)<this.playerHeight*.31+20)this.tomar(obj);
+    this.avatar.y=this.suelo-this.alturaSalto+(this.alturaSalto===0?Math.sin(this.distancia*.065)*2:0);
+    this.avatar.angle=this.alturaSalto?Phaser.Math.Clamp(this.velSalto/155,-5,5):Math.sin(this.distancia*.04)*.9;
+    this.sombra.scaleX=1+Math.min(this.alturaSalto/400,.5);
+    this.sombra.alpha=Math.max(.07,.23-this.alturaSalto/800);
+    [this.capa.far,this.capa.trees,this.capa.near].forEach(l=>l.tilePositionX=this.distancia*l.getData('parallax'));
+    this.capa.floor.tilePositionX=this.distancia;
+    const x0=this.personaX;
+    this.objetos.forEach((o,i)=>{
+      if(o.tomado)return;
+      const x=x0+o.x-this.distancia;o.sprite.x=x;o.sprite.y=this.suelo-o.alto+Math.sin(this.distancia*.01+i)*6;
+      o.sprite.visible=x>-70&&x<this.W+70;
+      const cy=this.suelo-this.alturaSalto-this.playerHeight*.55;
+      if(Math.abs(x-x0)<45&&Math.abs(cy-o.sprite.y)<this.playerHeight*.30+25)this.recolectar(o);
     });
-    this.obstaculos.forEach(ob=>{
-      const x=absX+ob.x-this.distancia;
-      ob.sprite.x=x;ob.sprite.visible=x>-130&&x<this.W+140;
-      if(!ob.toco&&this.hitCooldown<=0&&Math.abs(x-absX)<38&&this.alturaSalto<ob.height*.64)this.tropezar(ob);
+    this.obstaculos.forEach(o=>{
+      const x=x0+o.x-this.distancia;o.sprite.x=x;o.sprite.visible=x>-100&&x<this.W+90;
+      if(!o.toco&&this.hitCooldown<=0&&Math.abs(x-x0)<34&&this.alturaSalto<o.height*.58)this.chocar(o);
     });
-    if(this.hitCooldown>0)this.hitCooldown-=dt;
-    if(this.alturaSalto===0&&this.distancia-this.lastDust>72){this.lastDust=this.distancia;soltarPolvo(this,this.personaX-17,this.suelo,2);}
-    $('progress-fill').style.width=Math.min(100,(this.distancia/DISTANCIA_NIVEL)*100)+'%';
-    if(this.distancia>=DISTANCIA_NIVEL)this.abrirInvitacion();
+    this.hitCooldown=Math.max(0,this.hitCooldown-dt);
+    // La persona 2 espera al final del recorrido, bajo el arco.
+    const metaX=x0+DISTANCIA_NIVEL-this.distancia+82;
+    this.arco.x=metaX+1;this.pareja.x=metaX+43;
+    $('progress-fill').style.width=Math.min(100,this.distancia/DISTANCIA_NIVEL*100)+'%';
+    if(this.distancia>=DISTANCIA_NIVEL)this.encuentro();
   }
 }
 
@@ -784,7 +836,7 @@ async function iniciar(){
   ID_INVITACION=obtenerIdDeLaUrl();
   try{INVITACION=await cargarInvitacion(ID_INVITACION);}
   catch(e){console.warn('Se utilizarán datos de demostración:',e);INVITACION=CATALOGO_DEMO[ID_INVITACION]||CATALOGO_DEMO.demo;}
-  EMOJI_OBJETO=EMOJI_OBJETOS[INVITACION.objeto]||'⭐';
+  EMOJI_OBJETO=EMOJI_OBJETOS[INVITACION.objeto]||'🌸';
   COLOR_OBJETO=COLOR_OBJETOS[INVITACION.objeto]||0xffd93d;
   SIMBOLO_FINAL=EMOJI_FINAL[INVITACION.tipoEvento]||'🎉';
   const comenzar=INVITACION.incluyeJuego?await animarInicio():false;
@@ -794,7 +846,7 @@ async function iniciar(){
   }
   instanciaJuego=new Phaser.Game({
     type:Phaser.AUTO,width:window.innerWidth,height:window.innerHeight,
-    backgroundColor:'#f5c28c',parent:'game-container',
+    backgroundColor:'#f4e2d9',parent:'game-container',
     scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},
     render:{antialias:true,pixelArt:false},
     scene:INVITACION.incluyeJuego?(comenzar?[EscenaJuego,EscenaInvitacion]:[EscenaInvitacion,EscenaJuego]):[EscenaInvitacion]
