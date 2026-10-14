@@ -45,12 +45,6 @@ button:focus-visible,a:focus-visible { outline:3px solid #458cb1; outline-offset
 .hud-skip { pointer-events:auto; color:#6a4030; border:1px solid #fff5df99; border-radius:40px; background:#fff6e4c7; padding:12px 16px; font-weight:800; box-shadow:0 6px 24px #a85a3a18; }
 .hud-progress { display:none; }
 .hud-progress-label, .progress-track, #progress-fill { display:none; }
-.jump-wrap { pointer-events:none; position:absolute; bottom:max(18px,calc(env(safe-area-inset-bottom) + 8px)); left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:7px; }
-#jump-btn { pointer-events:auto; min-width:132px; height:54px; padding:0 18px; display:flex; flex-direction:row; align-items:center; justify-content:center; gap:10px; color:#755e58; background:rgba(255,251,247,.92); border:1px solid #f4ddd7; border-radius:999px; box-shadow:0 8px 28px rgba(119,94,88,.16); touch-action:manipulation; transition:transform .10s, box-shadow .10s, background .10s; }
-#jump-btn:active, #jump-btn.pressed { transform:translateY(2px) scale(.98); box-shadow:0 4px 16px rgba(119,94,88,.18); }
-.jump-symbol { font:700 24px/1 'Fredoka',sans-serif; width:24px; height:24px; display:flex; align-items:center; justify-content:center; color:#9c7a75; }
-.jump-word { font-weight:800; font-size:16px; letter-spacing:.01em; }
-.jump-hint { color:#7d6a65; font-weight:700; text-shadow:0 1px 6px rgba(255,255,255,.7); font-size:12px; letter-spacing:.01em; }
 /* INVITACIÓN */
 #invitation-view { display:none; position:fixed; z-index:20; inset:0; overflow-y:auto; overscroll-behavior:contain; background:linear-gradient(#f4c498 0%,#f8e8d2 36%,#fff6e9 70%); padding:0 16px 44px; }
 .invite-hero { margin:0 -16px; text-align:center; padding:52px 20px 80px; background:radial-gradient(circle at 78% 14%,#ffefd3 0 12%,transparent 13%),linear-gradient(165deg,#e4a477,#f7c792 80%); clip-path:ellipse(91% 100% at 50% 0%); }
@@ -91,7 +85,7 @@ button:focus-visible,a:focus-visible { outline:3px solid #458cb1; outline-offset
 #volver-jugar { display:none; width:max-content; margin:20px auto 0; padding:12px 18px; background:#fff8ea; border:1px solid #f0d7b9; border-radius:30px; color:#7d5038; font-weight:800; }
 .invite-footer { text-align:center; color:#ae8b71; font-size:12px; padding:25px 0 8px; }
 @media (max-width:580px) { .hud-progress { width:35vw; top:73px; } .hud-progress-label { font-size:9px; } .hud-chip { padding:9px 11px; font-size:12px; } .hud-chip strong { font-size:16px; } .hud-skip { font-size:11px; padding:11px; } .start-title { font-size:clamp(42px,11vw,68px); } .invite-actions { grid-template-columns:1fr 1fr; } .invite-actions a:last-child { grid-column:1/-1; } }
-@media (max-height:600px) { .start-title { font-size:clamp(39px,7vh,63px); } .start-content { margin:auto; padding:10px; } .start-subtitle { margin:8px auto; } .start-button { margin:10px auto 12px; padding:12px; } .skip-start { margin-top:6px; } .poster-caption { display:none; } .jump-wrap { bottom:13px; } #jump-btn { min-width:118px; height:48px; } .jump-hint { display:none; } }
+@media (max-height:600px) { .start-title { font-size:clamp(39px,7vh,63px); } .start-content { margin:auto; padding:10px; } .start-subtitle { margin:8px auto; } .start-button { margin:10px auto 12px; padding:12px; } .skip-start { margin-top:6px; } .poster-caption { display:none; } }
 
 /* CAMINO AL ALTAR · dirección visual maestra */
 :root { --ink:#4e3e38; --muted:#857167; --gold:#d3a368; --coral:#ce857d; --cream:#fff3e8; --paper:#fffbf6; --brown:#796453; }
@@ -112,14 +106,26 @@ html,body{background:#f7e9db}
 .sound-choice{color:#756963}.sound-choice input{accent-color:#78907a}.skip-start{color:#806d67}.poster-caption{color:#685d54;text-shadow:0 1px 8px white;max-width:88vw;line-height:1.35;text-align:center;font-size:10px;letter-spacing:.05em;margin:0 auto max(16px,env(safe-area-inset-bottom))}
 .hud-chip,.hud-skip{background:#fffaf1e8;border-color:#f4dfd0;color:#65584c}
 .hud-progress{display:none}
-#jump-btn{background:rgba(255,251,247,.92);color:#80635f;border-color:#fffaf8;box-shadow:0 8px 28px rgba(127,99,89,.14)}
-.jump-hint{color:#756452;text-shadow:0 1px 8px #fff}
 #invitation-view{background:linear-gradient(#e8d8d2 0%,#f5ebe4 38%,#fffaf4 100%)}
 .invite-hero{background:radial-gradient(circle at 75% 12%,#fff8e3 0 12%,transparent 20%),linear-gradient(150deg,#e6c4c5,#f6e7d1 78%)}
 .invite-title{color:#5c6054}.invite-hero small{color:#92736e}.invite-kind{color:#91776f}
 .detail-item{background:#f6eee6}.invite-card{background:#fffdf8}.detail-label{color:#99786f}.invite-actions a{background:#f9f2e9}.invite-actions a:hover{background:#f2e5d8}
 @media(max-height:690px){.start-title{font-size:clamp(32px,7vh,56px)}.start-content{padding:15px}.start-subtitle{font-size:13px;margin:8px auto}.start-button{padding:12px;margin:10px auto}.start-event{padding:7px 12px}.poster-caption{display:none}}
-@media(max-width:430px){.poster-caption{display:none}.hud-chip{padding:8px 10px}.hud-skip{padding:10px 11px}.hud-top{padding:12px}.start-content{width:94%}#jump-btn{min-width:116px;height:50px;padding:0 16px}.jump-word{font-size:15px}.jump-hint{font-size:11px}}
+@media(max-width:430px){.poster-caption{display:none}.hud-chip{padding:8px 10px}.hud-skip{padding:10px 11px}.hud-top{padding:12px}.start-content{width:94%}}
+
+/* SALTO SIN BOTÓN PERMANENTE · La pantalla entera es el control */
+#jump-tip {
+  position:absolute;bottom:max(21px,calc(env(safe-area-inset-bottom) + 12px));
+  left:50%;transform:translateX(-50%);white-space:nowrap;
+  padding:9px 16px;border-radius:999px;
+  background:rgba(255,252,248,.80);
+  border:1px solid rgba(241,224,215,.85);
+  color:#786760;font-size:12px;font-weight:700;letter-spacing:.01em;
+  box-shadow:0 5px 14px rgba(81,61,51,.07);
+  pointer-events:none;opacity:0;transition:opacity .55s ease;
+}
+#jump-tip.visible { opacity:1; }
+@media (prefers-reduced-motion: reduce) { #jump-tip { transition:none; } }
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
@@ -130,7 +136,7 @@ html,body{background:#f7e9db}
 <div id="game-container"></div>
 <div id="game-hud" aria-label="Controles del videojuego">
  <div class="hud-top"><div class="hud-chip" id="hud-count">💗 <strong>0 / 20</strong></div><button class="hud-skip" id="hud-skip" type="button">Ver invitación ↗</button></div>
- <div class="jump-wrap"><button id="jump-btn" type="button" aria-label="Saltar"><span class="jump-symbol">↑</span><span class="jump-word">Saltar</span></button><span class="jump-hint">Tocá para saltar</span></div>
+ <div id="jump-tip" aria-hidden="true">↑ &nbsp;Tocá cualquier parte para saltar</div>
 </div>
 <div id="invitation-view">
   <div class="invite-hero"><div class="invite-spark">♡ ✦ ♡</div><small>JUNTOS, HASTA EL FINAL</small><h1 class="invite-title" id="invite-names"></h1><div class="invite-kind" id="invite-kind"></div></div>
@@ -655,20 +661,23 @@ class EscenaJuego extends Phaser.Scene {
   }
   create(){
     $('invitation-view').style.display='none';$('game-hud').style.display='block';
-    document.querySelector('.jump-wrap').style.visibility='visible';
+    $('jump-tip').classList.remove('visible');
     this.W=this.scale.width;this.H=this.scale.height;
     this.suelo=Math.min(Math.round(this.H*.86),this.H-68); // piso delgado (~14 %), no una franja enorme
     this.playerHeight=Phaser.Math.Clamp(this.H*.25,105,180);
     if(this.W<470)this.playerHeight=Phaser.Math.Clamp(this.W*.39,115,165);
     this.personaX=Math.min(Math.max(this.W*.22,76),240);
     this.distancia=this.prevDistance;this.contador=this.prevCount;
-    this.alturaSalto=0;this.velSalto=0;this.hitCooldown=0;this.terminado=false;this.reunionActiva=false;this.lastDust=0;
+    this.alturaSalto=0;this.velSalto=0;this.hitCooldown=0;this.golpeRestante=0;this.terminado=false;this.reunionActiva=false;this.lastDust=0;
     this.capa=crearJardin(this,this.W,this.H,this.suelo);
     crearElementosJardin(this);
     const texP1=this.textures.exists('personajeFoto')
       ? prepararPersonajeNitido(this,'personajeFoto','personajeFotoSuave',this.playerHeight)
       : 'avatar-demo';
     this.avatar=this.add.image(this.personaX,this.suelo,texP1).setOrigin(.5,1).setDepth(8);
+    // El juego avanza de izquierda a derecha: este PNG de la novia mira hacia la izquierda.
+    // Lo espejamos para usarlo en el recorrido sin volver a generarlo con IA.
+    this.avatar.setFlipX(true);
     const dibujarProporcion=(img,altura)=>{const f=this.textures.get(img.texture.key).getSourceImage();const ratio=f.width/f.height;img.setDisplaySize(altura*ratio,altura)};
     dibujarProporcion(this.avatar,this.playerHeight);
     this.sombra=this.add.ellipse(this.personaX,this.suelo+4,this.playerHeight*.46,13,0x776858,.23).setDepth(1);
@@ -680,6 +689,7 @@ class EscenaJuego extends Phaser.Scene {
       ? prepararPersonajeNitido(this,'personajePareja','personajeParejaSuave',this.playerHeight)
       : 'pareja-pendiente';
     this.pareja=this.add.image(-900,this.suelo,texP2).setOrigin(.5,1).setDepth(7);
+    // En el encuentro, el novio puede mirar hacia la novia que llega desde la izquierda.
     dibujarProporcion(this.pareja,this.playerHeight*.99);
     this.objetos=[];
     this.obstaculos=[];
@@ -691,13 +701,22 @@ class EscenaJuego extends Phaser.Scene {
     this.indiceObstaculo=0;
     this.crearSiguientesObjetos();
     this.salto=()=>this.saltar();
-    $('jump-btn').onclick=this.salto;
     $('hud-skip').onclick=()=>this.abrirInvitacion();
-    this.input.on('pointerdown',p=>{if(p.downElement?.tagName==='CANVAS')this.saltar()});
+    // Toda el área de juego es táctil. No necesitamos un botón ocupando el piso.
+    this.input.on('pointerdown',this.salto);
     if(this.input.keyboard){this.input.keyboard.on('keydown-SPACE',this.salto);this.input.keyboard.on('keydown-UP',this.salto)}
+    const ayuda=$('jump-tip');
+    ayuda.classList.add('visible');
+    this.time.delayedCall(4400,()=>ayuda.classList.remove('visible'));
     this.onResize=()=>this.scene.restart({distance:this.distancia,contador:this.contador});
     this.scale.on('resize',this.onResize);
-    this.events.once('shutdown',()=>{this.scale.off('resize',this.onResize);$('jump-btn').onclick=null;$('hud-skip').onclick=null;if(this.input.keyboard){this.input.keyboard.off('keydown-SPACE',this.salto);this.input.keyboard.off('keydown-UP',this.salto)}});
+    this.events.once('shutdown',()=>{
+      ayuda.classList.remove('visible');
+      this.scale.off('resize',this.onResize);
+      this.input.off('pointerdown',this.salto);
+      $('hud-skip').onclick=null;
+      if(this.input.keyboard){this.input.keyboard.off('keydown-SPACE',this.salto);this.input.keyboard.off('keydown-UP',this.salto)}
+    });
     this.actualizarContador();
     if(SONIDO_ACTIVADO&&musicaJuego)musicaJuego.iniciar();
   }
@@ -735,7 +754,7 @@ class EscenaJuego extends Phaser.Scene {
   saltar(){
     if(this.terminado||this.reunionActiva||this.alturaSalto>1)return;
     this.velSalto=-Math.max(540,this.playerHeight*4.2);this.alturaSalto=2;
-    $('jump-btn').classList.add('pressed');this.time.delayedCall(130,()=>$('jump-btn').classList.remove('pressed'));
+    $('jump-tip').classList.remove('visible');
     particulas(this,this.personaX-18,this.suelo,4,false);
   }
   recolectar(obj){
@@ -747,16 +766,21 @@ class EscenaJuego extends Phaser.Scene {
     if(this.contador===OBJETOS_PARA_GANAR)this.encuentro();
   }
   chocar(obstaculo){
-    obstaculo.toco=true;this.hitCooldown=.85;
-    this.avatar.setTint(0xffa6a8);this.time.delayedCall(260,()=>this.avatar?.clearTint());
-    this.cameras.main.shake(110,.002);particulas(this,this.personaX+16,this.suelo-24,4,false);
+    obstaculo.toco=true;
+    this.hitCooldown=.85;
+    this.golpeRestante=.46;
+    // Recuperamos la reacción: rojo + temblor propio del personaje, no del teléfono.
+    this.avatar.setTint(0xff9d9d);
+    this.time.delayedCall(360,()=>{if(this.avatar?.active)this.avatar.clearTint()});
+    this.cameras.main.shake(90,.0015);
+    particulas(this,this.personaX+16,this.suelo-24,4,false);
   }
   encuentro(){
     if(this.reunionActiva||this.terminado)return;
     this.reunionActiva=true;
-    this.avatar.setAngle(0);this.avatar.y=this.suelo;
+    this.avatar.setAngle(0);this.avatar.y=this.suelo;this.avatar.x=this.personaX;this.golpeRestante=0;this.avatar.clearTint();
     this.alturaSalto=0;this.velSalto=0;
-    document.querySelector('.jump-wrap').style.visibility='hidden';
+    $('jump-tip').classList.remove('visible');
     const arcoFinalX=Math.min(this.W-125,Math.max(this.W*.63,195));
     const parejaFinalX=arcoFinalX+37;
     const avatarFinalX=arcoFinalX-35;
@@ -775,7 +799,7 @@ class EscenaJuego extends Phaser.Scene {
   }
   abrirInvitacion(){
     if(this.terminado)return;this.terminado=true;
-    $('jump-btn').style.visibility='';
+    $('jump-tip').classList.remove('visible');
     if(musicaJuego)musicaJuego.detener();
     $('game-hud').style.display='none';this.scene.start('EscenaInvitacion');
   }
@@ -789,7 +813,12 @@ class EscenaJuego extends Phaser.Scene {
       if(this.alturaSalto<=0){this.alturaSalto=0;this.velSalto=0;particulas(this,this.personaX-16,this.suelo,2,false)}
     }
     this.avatar.y=this.suelo-this.alturaSalto+(this.alturaSalto===0?Math.sin(this.distancia*.065)*2:0);
-    this.avatar.angle=this.alturaSalto?Phaser.Math.Clamp(this.velSalto/155,-5,5):Math.sin(this.distancia*.04)*.9;
+    const anguloNormal=this.alturaSalto?Phaser.Math.Clamp(this.velSalto/155,-5,5):Math.sin(this.distancia*.04)*.9;
+    // Oscilación visible que se amortigua en menos de medio segundo.
+    this.golpeRestante=Math.max(0,this.golpeRestante-dt);
+    const fuerza=this.golpeRestante/.46;
+    this.avatar.x=this.personaX+(fuerza?Math.sin(_time*.11)*10*fuerza:0);
+    this.avatar.angle=anguloNormal+(fuerza?Math.sin(_time*.17)*10*fuerza:0);
     this.sombra.scaleX=1+Math.min(this.alturaSalto/400,.5);
     this.sombra.alpha=Math.max(.07,.23-this.alturaSalto/800);
     [this.capa.far,this.capa.trees,this.capa.near].forEach(l=>l.tilePositionX=this.distancia*l.getData('parallax'));
