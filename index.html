@@ -129,7 +129,7 @@ html,body{background:#f7e9db}
 <body>
 <div id="game-container"></div>
 <div id="game-hud" aria-label="Controles del videojuego">
- <div class="hud-top"><div class="hud-chip" id="hud-count">💗 <strong>0 / 10</strong></div><button class="hud-skip" id="hud-skip" type="button">Ver invitación ↗</button></div>
+ <div class="hud-top"><div class="hud-chip" id="hud-count">💗 <strong>0 / 20</strong></div><button class="hud-skip" id="hud-skip" type="button">Ver invitación ↗</button></div>
  <div class="jump-wrap"><button id="jump-btn" type="button" aria-label="Saltar"><span class="jump-symbol">↑</span><span class="jump-word">Saltar</span></button><span class="jump-hint">Tocá para saltar</span></div>
 </div>
 <div id="invitation-view">
@@ -165,8 +165,8 @@ const CATALOGO_DEMO = {
     direccion: "Av. Libertador 1234, CABA",
     objeto: "corazon",
     // Demo: el novio corre, la novia espera en el altar.
-    personaje1Url: "personaje-doodle-2.png",
-    personaje2Url: "personaje-doodle-1.png",
+    personaje1Url: "personaje-doodle-1.png",
+    personaje2Url: "personaje-doodle-2.png",
     fechaHoraIso: "2027-03-14T19:30:00",
     dressCode: "Elegante sport",
     regaloTexto: "Si querés hacernos un regalo, preferimos una ayuda para la luna de miel:",
@@ -445,7 +445,7 @@ const CONFIG_PLANTILLA = Object.freeze({
   id: 'jardin-boda',
   velocidad: 265,                    // px/segundo
   longitud: 7950,                   // referencia heredada, NO determina el final
-  objetosParaObjetivo: 10,          // la meta depende solamente de las flores
+  objetosParaObjetivo: 20,          // la meta depende solamente de las flores
   espaciadoColeccionables: 285,     // mucho más frecuentes que en el desierto
   inicioObstaculos: 780,
   espaciadoObstaculos: 535
@@ -614,6 +614,36 @@ function assetPersonaje(i){
   const dato=i==='p1'?INVITACION.personaje1Url:INVITACION.personaje2Url;
   return dato || (i==='p1'?'personaje-cabeza.png':null);
 }
+function prepararPersonajeNitido(scene,claveOriginal,claveFinal,altoVisible){
+  // Las ilustraciones originales son PNG grandes. Reducirlas directamente de
+  // 1536 px a ~150 px en la GPU puede dar bordes dentados en algunos móviles.
+  // Por eso hacemos una miniatura de alta calidad, sin consumir ninguna API.
+  if(!scene.textures.exists(claveOriginal))return claveOriginal;
+  if(scene.textures.exists(claveFinal))return claveFinal;
+  const fuente=scene.textures.get(claveOriginal).getSourceImage();
+  if(!fuente || !fuente.width || !fuente.height)return claveOriginal;
+  const resolucion=Math.min(window.devicePixelRatio||1,2);
+  const altoFinal=Math.min(fuente.height,Math.max(180,Math.round(altoVisible*resolucion*1.2)));
+  const anchoFinal=Math.max(1,Math.round(fuente.width*altoFinal/fuente.height));
+  let origen=fuente,ancho=fuente.width,alto=fuente.height;
+  // Reducimos en etapas para conservar las líneas finas de la caricatura.
+  while(alto>altoFinal*2){
+    const siguiente=document.createElement('canvas');
+    siguiente.width=Math.max(anchoFinal,Math.round(ancho/2));
+    siguiente.height=Math.max(altoFinal,Math.round(alto/2));
+    const ctx=siguiente.getContext('2d');
+    ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+    ctx.drawImage(origen,0,0,siguiente.width,siguiente.height);
+    origen=siguiente;ancho=siguiente.width;alto=siguiente.height;
+  }
+  const textura=scene.textures.createCanvas(claveFinal,anchoFinal,altoFinal);
+  const ctx=textura.getContext();
+  ctx.clearRect(0,0,anchoFinal,altoFinal);
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  ctx.drawImage(origen,0,0,anchoFinal,altoFinal);
+  textura.refresh();
+  return claveFinal;
+}
 class EscenaJuego extends Phaser.Scene {
   constructor(){super('EscenaJuego')}
   init(data){this.prevDistance=data?.distance||0;this.prevCount=data?.contador||0}
@@ -625,16 +655,19 @@ class EscenaJuego extends Phaser.Scene {
   }
   create(){
     $('invitation-view').style.display='none';$('game-hud').style.display='block';
+    document.querySelector('.jump-wrap').style.visibility='visible';
     this.W=this.scale.width;this.H=this.scale.height;
-    this.suelo=Math.min(Math.round(this.H*.76),this.H-115);
+    this.suelo=Math.min(Math.round(this.H*.86),this.H-68); // piso delgado (~14 %), no una franja enorme
     this.playerHeight=Phaser.Math.Clamp(this.H*.25,105,180);
-    if(this.W<470)this.playerHeight=Phaser.Math.Clamp(this.W*.34,105,146);
+    if(this.W<470)this.playerHeight=Phaser.Math.Clamp(this.W*.39,115,165);
     this.personaX=Math.min(Math.max(this.W*.22,76),240);
     this.distancia=this.prevDistance;this.contador=this.prevCount;
     this.alturaSalto=0;this.velSalto=0;this.hitCooldown=0;this.terminado=false;this.reunionActiva=false;this.lastDust=0;
     this.capa=crearJardin(this,this.W,this.H,this.suelo);
     crearElementosJardin(this);
-    const texP1=this.textures.exists('personajeFoto')?'personajeFoto':'avatar-demo';
+    const texP1=this.textures.exists('personajeFoto')
+      ? prepararPersonajeNitido(this,'personajeFoto','personajeFotoSuave',this.playerHeight)
+      : 'avatar-demo';
     this.avatar=this.add.image(this.personaX,this.suelo,texP1).setOrigin(.5,1).setDepth(8);
     const dibujarProporcion=(img,altura)=>{const f=this.textures.get(img.texture.key).getSourceImage();const ratio=f.width/f.height;img.setDisplaySize(altura*ratio,altura)};
     dibujarProporcion(this.avatar,this.playerHeight);
@@ -643,12 +676,14 @@ class EscenaJuego extends Phaser.Scene {
     this.arco=this.add.image(-900,this.suelo+5,'arco-boda').setOrigin(.5,1).setDepth(3);
     const alturaArco=Phaser.Math.Clamp(this.playerHeight*1.95,215,325);
     this.arco.setDisplaySize(alturaArco*400/330,alturaArco);
-    const texP2=this.textures.exists('personajePareja')?'personajePareja':'pareja-pendiente';
+    const texP2=this.textures.exists('personajePareja')
+      ? prepararPersonajeNitido(this,'personajePareja','personajeParejaSuave',this.playerHeight)
+      : 'pareja-pendiente';
     this.pareja=this.add.image(-900,this.suelo,texP2).setOrigin(.5,1).setDepth(7);
     dibujarProporcion(this.pareja,this.playerHeight*.99);
     this.objetos=[];
     this.obstaculos=[];
-    // Los objetos van apareciendo hasta completar las 10 flores.
+    // Los objetos siguen apareciendo hasta recolectar las 20 flores.
     // No hay un final por tiempo ni por distancia.
     this.proximaFlor=Math.max(350,this.distancia+300);
     this.indiceFlor=Math.round((this.proximaFlor-350)/CONFIG_PLANTILLA.espaciadoColeccionables);
@@ -708,7 +743,7 @@ class EscenaJuego extends Phaser.Scene {
     obj.tomado=true;this.contador++;this.actualizarContador();
     particulas(this,this.personaX+10,this.suelo-this.playerHeight*.62-this.alturaSalto,7,false);
     this.tweens.add({targets:obj.sprite,alpha:0,scale:1.3,y:obj.sprite.y-35,duration:260,onComplete:()=>obj.sprite.setVisible(false)});
-    // La décima flor activa el encuentro, sin esperar otra barra o distancia.
+    // La flor número 20 activa el encuentro, sin otra barra ni distancia fija.
     if(this.contador===OBJETOS_PARA_GANAR)this.encuentro();
   }
   chocar(obstaculo){
@@ -721,7 +756,7 @@ class EscenaJuego extends Phaser.Scene {
     this.reunionActiva=true;
     this.avatar.setAngle(0);this.avatar.y=this.suelo;
     this.alturaSalto=0;this.velSalto=0;
-    $('jump-btn').style.visibility='hidden';
+    document.querySelector('.jump-wrap').style.visibility='hidden';
     const arcoFinalX=Math.min(this.W-125,Math.max(this.W*.63,195));
     const parejaFinalX=arcoFinalX+37;
     const avatarFinalX=arcoFinalX-35;
@@ -773,8 +808,7 @@ class EscenaJuego extends Phaser.Scene {
       if(!o.toco&&this.hitCooldown<=0&&Math.abs(x-x0)<34&&this.alturaSalto<o.height*.58)this.chocar(o);
     });
     this.hitCooldown=Math.max(0,this.hitCooldown-dt);
-    // La persona 2 se acerca sólo si todavía no se juntaron las 10 flores.
-    // El encuentro sólo empieza al recolectar las 10 flores.
+    // El encuentro sólo empieza cuando se juntan 20 flores.
     // Arco y pareja permanecen fuera de pantalla durante el recorrido.
   }
 }
@@ -870,8 +904,8 @@ async function iniciar(){
   // En la demo del jardín usamos siempre los PNG que ya subiste.
   // Así evitamos volver a mostrar avatares de pruebas anteriores.
   if (ID_INVITACION === 'demo') {
-    INVITACION.personaje1Url = 'personaje-doodle-2.png'; // novio que corre
-    INVITACION.personaje2Url = 'personaje-doodle-1.png'; // novia que espera
+    INVITACION.personaje1Url = 'personaje-doodle-1.png'; // novia que corre
+    INVITACION.personaje2Url = 'personaje-doodle-2.png'; // novio que espera
   }
   EMOJI_OBJETO=EMOJI_OBJETOS[INVITACION.objeto]||'🌸';
   COLOR_OBJETO=COLOR_OBJETOS[INVITACION.objeto]||0xffd93d;
@@ -883,9 +917,10 @@ async function iniciar(){
   }
   instanciaJuego=new Phaser.Game({
     type:Phaser.AUTO,width:window.innerWidth,height:window.innerHeight,
+    resolution:Math.min(window.devicePixelRatio||1,2), // nitidez Retina con un límite razonable
     backgroundColor:'#f4e2d9',parent:'game-container',
     scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},
-    render:{antialias:true,pixelArt:false},
+    render:{antialias:true,antialiasGL:true,pixelArt:false,roundPixels:false},
     scene:INVITACION.incluyeJuego?(comenzar?[EscenaJuego,EscenaInvitacion]:[EscenaInvitacion,EscenaJuego]):[EscenaInvitacion]
   });
 }
