@@ -1,115 +1,217 @@
-// ======================================================
-// Esta función corre en los servidores de Cloudflare, NUNCA en el
-// navegador del invitado ni del cliente. Por eso es el único lugar
-// donde podemos usar la clave secreta de OpenAI (env.OPENAI_API_KEY) sin
-// riesgo de que alguien la vea mirando el código de la página.
-//
-// Qué hace: recibe una foto (enviada desde una página con un formulario),
-// le pide a OpenAI que la convierta en un retrato tipo dibujo animado, y
-// devuelve esa imagen nueva.
-//
-// Esta es una PRUEBA AISLADA: todavía no está conectada al juego. La idea
-// es primero confirmar que esta conexión con OpenAI funciona bien sola,
-// antes de meterla dentro del flujo real.
-//
-// IMPORTANTE (decisión de producto, no técnica): el personaje en el juego
-// es una imagen ESTÁTICA y QUIETA — avanza y salta como un bloque entero,
-// no tiene piernas animadas ni nada que se mueva por separado. Por eso acá
-// le pedimos a la IA UNA sola pose, de cuerpo completo, parado y quieto.
-//
-// Por ahora este archivo genera siempre el estilo "doodle" (el que ya
-// probamos y aprobamos). Más adelante, cuando sumemos los otros dos
-// estilos (retro tipo plataformero y pixel art), este mismo archivo va a
-// recibir qué estilo eligió el comprador y va a armar un prompt distinto
-// para cada uno — por ahora dejamos esa parte sin construir todavía, para
-// no sumar complejidad antes de tener el estilo base funcionando bien.
-// ======================================================
+
+const MODELO_IMAGEN = 'gpt-image-2.5-flare';
+const CALIDAD_IMAGEN = 'high';
+const TAMANO_IMAGEN = '1024x1536';
+const MAX_FOTO_BYTES = 8 * 1024 * 1024;
+
+const INSTRUCCIONES_ESTILO = {
+  doodle: `
+ESTILO DOODLE ILUSTRADO PREMIUM:
+- Ilustración 2D moderna, cálida, divertida y profesional, como el arte de un videojuego independiente muy cuidado.
+- Silueta redondeada, proporciones ligeramente caricaturizadas y expresiones naturales.
+- Cabeza apenas más grande que la real, pero NO enorme. Cuerpo completo creíble dentro del estilo.
+- Rostro simplificado SIN borrar sus rasgos distintivos. Ojos, cejas, nariz, boca y barba deben conservar diferencias individuales.
+- Contornos limpios de grosor consistente; colores armónicos, con sombras muy sutiles si mejoran el acabado.
+- Evitar muñeco infantil genérico, emoji, stick figure, manos de palitos y cabeza perfectamente circular.`,
+
+  retro: `
+ESTILO RETRO DE PLATAFORMAS DE 16 BITS:
+- Personaje 2D inspirado en la dirección artística de videojuegos de plataformas de los años noventa, con identidad visual original.
+- Formas definidas, volumen estilizado, sombras por bloques y una paleta de colores armoniosa.
+- Detalles suficientes para reconocer el peinado, el rostro, la barba y la ropa de la persona.
+- Proporciones propias de un personaje de videojuego retro, con anatomía legible y postura firme.
+- Bordes nítidos y acabado artesanal; evitar apariencia de sticker moderno o ilustración fotográfica.
+- NO copiar personajes, disfraces, símbolos ni diseños de franquicias existentes.`,
+
+  pixel: `
+ESTILO PIXEL ART:
+- Sprite 2D original de cuerpo completo, construido visualmente con píxeles cuadrados claramente perceptibles.
+- Resolución aparente baja y grupos de píxeles deliberados, con contornos escalonados consistentes.
+- Paleta limitada pero suficiente para distinguir el tono de piel, peinado, barba, rostro y prendas.
+- Silueta fuerte y legible al reducir su tamaño en la pantalla de un celular.
+- Sombras pixeladas por bloques, sin antialiasing, sin bordes suavizados y sin mezcla de estilos.
+- NO aplicar solamente un filtro pixelado a una ilustración normal: diseñar el personaje como auténtico arte pixelado.`,
+};
+
+const INSTRUCCIONES_COMUNES = `
+TAREA:
+Convertí exclusivamente a la persona de la fotografía adjunta en UN personaje original de videojuego 2D, de cuerpo completo, listo para usar como protagonista de una invitación interactiva de alta calidad.
+
+PRIORIDAD 1 — IDENTIDAD Y PARECIDO:
+Usá la fotografía como referencia principal, NO como inspiración vaga.
+Conservá todo lo que sea visible y distintivo: forma general del rostro, peinado y color de pelo, línea del cabello, cejas, nariz, ojos, sonrisa, tono de piel, barba o bigote, anteojos y otros accesorios reales.
+Conservá el tipo y los colores de la ropa que se ve en la foto, simplificándolos de acuerdo con el estilo visual.
+No agregues sombreros, disfraces, mochilas, joyas, accesorios ni cambios de peinado que no estén en la referencia.
+Si las piernas, los zapatos o parte de la ropa no se ven, completá discretamente esas zonas de forma coherente y sencilla, sin inventar detalles llamativos. No afirmes conocer características que la foto no muestra.
+La persona debe resultar reconocible para alguien que conoce su fotografía, sin pretender exactitud fotográfica.
+
+PRIORIDAD 2 — DISEÑO DE PERSONAJE PARA JUEGO:
+Dibujá UNA SOLA figura completa, desde la parte superior del pelo hasta la suela de ambos zapatos.
+Pose neutra y quieta, de pie, sin correr ni saltar. Brazos relajados y separados del torso; piernas y pies claramente visibles y separados.
+Postura frontal o apenas girada en tres cuartos, con silueta ordenada y fácil de leer cuando aparece pequeña en el celular.
+Mantené el rostro expresivo y amable, acorde a la expresión original sin exagerarla.
+Centrado, vertical, ocupando aproximadamente el 85 % de la altura del lienzo y dejando un margen fino en todos los lados.
+Proporciones naturales dentro del estilo escogido; NO estirar ni aplastar el cuerpo.
+
+PRIORIDAD 3 — ENTREGA TÉCNICA:
+Un solo personaje aislado. Fondo TOTALMENTE transparente, con transparencia real (canal alfa).
+Sin piso, paisaje, sombras proyectadas en el suelo, recuadros, marcos, letras, nombres, logotipos ni otros objetos.
+No recortes la cabeza, el cabello, las manos, las piernas ni el calzado.
+Ilustración prolija, profesional y consistente, sin extremidades extras, dedos deformados ni elementos superpuestos por error.
+No agregues otras personas. No hagas una hoja de sprites ni varias poses.
+`;
+
+function responderJSON(datos, estado = 200) {
+  return new Response(JSON.stringify(datos), {
+    status: estado,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
+}
+
+function normalizarEstilo(valor) {
+  const estilo = String(valor || 'doodle').trim().toLowerCase();
+  if (estilo === 'pixel-art' || estilo === 'pixel_art' || estilo === 'pixelart') return 'pixel';
+  if (estilo === 'retro-16bits' || estilo === '16bits') return 'retro';
+  return estilo;
+}
+
+async function validarFoto(archivo, nombre) {
+  if (!archivo || typeof archivo.arrayBuffer !== 'function' || typeof archivo.slice !== 'function') {
+    return `Falta ${nombre}. Subí una foto JPG, PNG o WebP.`;
+  }
+  if (!archivo.size || archivo.size > MAX_FOTO_BYTES) {
+    return `${nombre} debe pesar más de 0 bytes y como máximo 8 MB.`;
+  }
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(archivo.type)) {
+    return `${nombre} debe estar en formato JPG, PNG o WebP (no HEIC).`;
+  }
+
+  const b = new Uint8Array(await archivo.slice(0, 12).arrayBuffer());
+  const esJPG = b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
+  const esPNG = b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47;
+  const esWebP = String.fromCharCode(...b.slice(0, 4)) === 'RIFF' &&
+    String.fromCharCode(...b.slice(8, 12)) === 'WEBP';
+
+  const valido = (archivo.type === 'image/jpeg' && esJPG) ||
+    (archivo.type === 'image/png' && esPNG) ||
+    (archivo.type === 'image/webp' && esWebP);
+
+  return valido ? null : `${nombre} no parece ser una imagen válida.`;
+}
+
+async function generarUnaImagen(foto, estilo, apiKey) {
+  const formulario = new FormData();
+
+  formulario.append('model', MODELO_IMAGEN);
+  formulario.append('image', foto, foto.name || 'referencia.png');
+  formulario.append('prompt', INSTRUCCIONES_COMUNES + '\n' + INSTRUCCIONES_ESTILO[estilo]);
+  formulario.append('size', TAMANO_IMAGEN);
+  formulario.append('quality', CALIDAD_IMAGEN);
+  formulario.append('background', 'transparent');
+  formulario.append('output_format', 'png');
+  formulario.append('n', '1');
+
+  const respuesta = await fetch('https://api.openai.com/v1/images/edits', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: formulario,
+  });
+
+  const resultado = await respuesta.json().catch(() => null);
+
+  if (!respuesta.ok) {
+    console.error(
+      'Error de la API de imágenes:',
+      respuesta.status,
+      resultado?.error?.message || 'Sin detalle'
+    );
+    throw new Error(
+      `OpenAI respondió con estado ${respuesta.status}. Consultá el registro de Cloudflare.`
+    );
+  }
+
+  const base64 = resultado?.data?.[0]?.b64_json;
+
+  if (typeof base64 !== 'string' || !base64.length) {
+    throw new Error('OpenAI no devolvió la imagen esperada.');
+  }
+
+  return `data:image/png;base64,${base64}`;
+}
 
 export async function onRequestPost(context) {
   try {
     const { request, env } = context;
 
     if (!env.OPENAI_API_KEY) {
-      return new Response(
-        JSON.stringify({ error: 'Falta configurar OPENAI_API_KEY en Cloudflare (Settings → Environment variables).' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
+      return responderJSON({
+        error: 'Falta OPENAI_API_KEY en las variables de entorno de Cloudflare.'
+      }, 500);
+    }
+
+    if (!request.headers.get('content-type')?.toLowerCase().includes('multipart/form-data')) {
+      return responderJSON({
+        error: 'El formulario debe enviarse como multipart/form-data.'
+      }, 415);
     }
 
     const entrada = await request.formData();
     const foto = entrada.get('foto');
+    const foto2 = entrada.get('foto2');
+    const estilo = normalizarEstilo(entrada.get('estilo'));
 
-    if (!foto) {
-      return new Response(
-        JSON.stringify({ error: 'No llegó ninguna foto en el pedido.' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+    if (!Object.hasOwn(INSTRUCCIONES_ESTILO, estilo)) {
+      return responderJSON({
+        error: 'Estilo no válido. Elegí doodle, retro o pixel.'
+      }, 400);
     }
 
-    // Armamos el pedido a OpenAI: le mandamos la foto original y una
-    // descripción de cómo queremos que la transforme.
-    const formParaOpenAI = new FormData();
-    formParaOpenAI.append('model', 'gpt-image-1');
-    formParaOpenAI.append('image', foto, 'foto.png');
-    formParaOpenAI.append(
-      'prompt',
-      'Generá un personaje estilo "doodle" minimalista y tierno (como un sticker de boda cute), de ' +
-      'CUERPO COMPLETO, de pies a cabeza (incluí piernas y pies, no cortes a la altura de la cadera ' +
-      'ni en ningún otro lado). Parado derecho, de pie, mirando de frente, simétrico, en una pose ' +
-      'QUIETA Y NEUTRA — no corriendo, no saltando, no caminando, como una foto de perfil de cuerpo ' +
-      'entero. Cabeza grande y redonda en proporción al cuerpo, que es chico y simple. Pelo como forma ' +
-      'sólida de color plano, SIN mechones ni textura. Ojos simples (puntitos o líneas curvas), boca ' +
-      'como línea curva simple, mejillas con un toque de color rosado. Brazos finos tipo línea, CAÍDOS ' +
-      'Y SUELTOS a los costados del cuerpo, ligeramente separados del torso — NUNCA cruzados, NUNCA en ' +
-      'la cintura. Piernas simples y derechas (sin doblar, sin estar en movimiento), un poco más anchas ' +
-      'arriba y más angostas abajo, terminando en pies o calzado simple y chato. TODOS los colores ' +
-      'sólidos y lisos, SIN sombreados, SIN degradados, sin textura de ningún tipo. Inspirate en el ' +
-      'pelo, tono de piel y vibra general de la foto, pero el resultado tiene que verse como un dibujo ' +
-      'plano, no como una ilustración realista. Fondo completamente transparente, nada alrededor del ' +
-      'personaje.'
-    );
-    formParaOpenAI.append('size', '1024x1024');
-    formParaOpenAI.append('quality', 'low'); // la económica: ya sabemos que acá le alcanza para una sola pose
-    formParaOpenAI.append('background', 'transparent'); // esto saca el fondo de color que vimos en la prueba
-    formParaOpenAI.append('output_format', 'png'); // hace falta png (o webp) para que la transparencia funcione
-    formParaOpenAI.append('n', '1');
+    const errorFoto1 = await validarFoto(foto, 'La primera foto');
 
-    const respuestaOpenAI = await fetch('https://api.openai.com/v1/images/edits', {
-      method: 'POST',
-      headers: {
-        Authorization: 'Bearer ' + env.OPENAI_API_KEY,
-      },
-      body: formParaOpenAI,
+    if (errorFoto1) {
+      return responderJSON({ error: errorFoto1 }, 400);
+    }
+
+    const tieneSegundaFoto = foto2 !== null && foto2 !== '';
+
+    if (tieneSegundaFoto) {
+      const errorFoto2 = await validarFoto(foto2, 'La segunda foto');
+
+      if (errorFoto2) {
+        return responderJSON({ error: errorFoto2 }, 400);
+      }
+    }
+
+    // Cada protagonista se genera independientemente.
+    // Si hay dos fotos, las solicitudes se procesan en paralelo.
+    const fotos = tieneSegundaFoto ? [foto, foto2] : [foto];
+
+    const imagenes = await Promise.all(
+      fotos.map(archivo =>
+        generarUnaImagen(archivo, estilo, env.OPENAI_API_KEY)
+      )
+    );
+
+    return responderJSON({
+      imagen: imagenes[0],
+      ...(imagenes.length === 2 ? { imagen2: imagenes[1] } : {}),
+      imagenes,
+      estilo,
+      cantidad: imagenes.length,
     });
 
-    const resultado = await respuestaOpenAI.json();
-
-    if (!respuestaOpenAI.ok) {
-      console.error('Error de OpenAI:', JSON.stringify(resultado));
-      return new Response(
-        JSON.stringify({ error: 'OpenAI devolvió un error.', detalle: resultado }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const imagenB64 = resultado?.data?.[0]?.b64_json;
-    if (!imagenB64) {
-      console.error('Respuesta sin imagen:', JSON.stringify(resultado));
-      return new Response(
-        JSON.stringify({ error: 'OpenAI no devolvió ninguna imagen.', detalle: resultado }),
-        { status: 502, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    return new Response(
-      JSON.stringify({ imagen: 'data:image/png;base64,' + imagenB64 }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
   } catch (error) {
-    console.error('Error inesperado en generar-cara:', error);
-    return new Response(
-      JSON.stringify({ error: 'Error inesperado en el servidor.', detalle: String(error) }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    console.error('Fallo en generar-cara:', error);
+
+    return responderJSON({
+      error: 'No se pudieron generar los personajes.',
+      detalle: String(error?.message || error),
+    }, 502);
   }
 }
