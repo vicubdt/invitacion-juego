@@ -1,87 +1,172 @@
-<!DOCTYPE html>
+
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Prueba: generar cara con IA</title>
-<style>
-  body { font-family: sans-serif; background:#1a1a2e; color:#fff; padding:20px; max-width:480px; margin:0 auto; box-sizing:border-box; }
-  h2 { color:#ffd93d; }
-  input, button { font-size:16px; padding:12px; margin-top:12px; width:100%; box-sizing:border-box; border-radius:8px; border:none; }
-  button { background:#ffd93d; color:#1a1a2e; font-weight:bold; cursor:pointer; }
-  button:disabled { background:#666; color:#fff; cursor:default; }
-  #estado { margin-top:10px; font-size:14px; color:#ccc; min-height:20px; }
-  img { max-width:100%; margin-top:16px; border-radius:8px; display:block; }
-  #comparacion { display:flex; gap:12px; flex-wrap:wrap; margin-top:16px; }
-  #comparacion > div { flex:1; min-width:140px; }
-  #comparacion p { font-size:12px; color:#ccc; margin:4px 0; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Laboratorio de personajes · Invitaciones Juego</title>
+  <style>
+    :root { color-scheme:light; --tinta:#493a31; --sub:#806f62; --papel:#fff9f1; --borde:#e9d9c9; --coral:#df7658; }
+    * {box-sizing:border-box}
+    body {margin:0;background:linear-gradient(135deg,#f9e3c7,#ffefda 65%,#efdbc7);color:var(--tinta);font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
+    main {max-width:950px;margin:0 auto;padding:22px 16px 65px}
+    header {margin:18px 0 24px} h1{font-size:clamp(29px,5vw,42px);line-height:1.12;margin:7px 0 8px;letter-spacing:-.04em}
+    p{line-height:1.5} .eyebrow{font-weight:800;color:#a8664b;text-transform:uppercase;letter-spacing:.15em;font-size:12px}
+    .muted{color:var(--sub);font-size:14px}.card{background:var(--papel);border:1px solid #fff;box-shadow:0 12px 40px #80533b1c;border-radius:24px;padding:clamp(18px,4vw,30px);margin-bottom:20px}
+    .field{margin:16px 0}.field label,legend{display:block;font-weight:750;margin-bottom:9px}select,input[type=file]{width:100%;max-width:100%;padding:12px;border:1px solid var(--borde);background:white;border-radius:12px;color:var(--tinta);font-size:16px}
+    fieldset{border:0;padding:0;margin:15px 0}.radios{display:flex;gap:10px;flex-wrap:wrap}.radios label{padding:10px 14px;border:1px solid var(--borde);border-radius:14px;background:white;cursor:pointer}
+    input[type=radio]{accent-color:#b75a3f}.fotos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .foto-box{padding:14px;border:1px solid var(--borde);border-radius:16px;background:#fffdf8;min-width:0}
+    .file-hint{font-size:12px;color:var(--sub);margin:7px 0 0}
+    .primary{border:0;border-radius:15px;padding:17px 24px;background:#754a38;color:white;font-size:17px;font-weight:800;width:100%;cursor:pointer}
+    .primary:hover{background:#61402f}.primary:disabled{opacity:.6;cursor:wait}
+    .notice{margin:14px 0 0;padding:12px 14px;background:#f7e9d9;border-radius:12px;font-size:14px;display:none}
+    .notice.error{background:#ffe6de;color:#8d3027}.notice.show{display:block}
+    .results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .result{background:#fffcf6;padding:14px;border:1px solid var(--borde);border-radius:18px;min-width:0}
+    .result h3{margin:2px 0 10px;font-size:15px}.checker{background-color:white;background-image:linear-gradient(45deg,#e5e5e5 25%,transparent 25%),linear-gradient(-45deg,#e5e5e5 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e5e5e5 75%),linear-gradient(-45deg,transparent 75%,#e5e5e5 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0;display:grid;place-items:center;min-height:230px;border-radius:12px;overflow:hidden}
+    .checker img{display:block;width:100%;height:auto;max-height:430px;object-fit:contain}
+    .download{display:inline-block;margin-top:12px;background:#fff;border:1px solid #d5ba9c;color:#6e4635;border-radius:12px;padding:10px 12px;font-weight:700;text-decoration:none;font-size:14px}
+    .hidden{display:none!important}
+    @media(max-width:600px){.fotos,.results{grid-template-columns:1fr}.checker{min-height:200px}.card{border-radius:18px}}
+  </style>
 </head>
 <body>
-  <h2>Prueba: generar cara con IA</h2>
-  <p style="font-size:14px;color:#ccc;">Esta página es solo para probar la conexión con OpenAI, de forma aislada. Todavía no forma parte del juego ni de la invitación — es para confirmar que el circuito completo (foto → Cloudflare → OpenAI → imagen de vuelta) funciona antes de integrarlo.</p>
+<main>
+  <header>
+    <div class="eyebrow">Invitaciones Juego · Prueba interna</div>
+    <h1>Laboratorio de personajes</h1>
+    <p class="muted">Compará los tres estilos con una o dos fotos. Esta pantalla es de prueba; no es la página que verá el comprador.</p>
+  </header>
+  <section class="card">
+    <form id="formulario">
+      <div class="field">
+        <label for="estilo">Elegí el estilo</label>
+        <select id="estilo" name="estilo">
+          <option value="doodle">Doodle · dibujo simple y caricaturizado</option>
+          <option value="retro">Retro · videojuego de plataformas clásico</option>
+          <option value="pixel">Pixel art · píxeles cuadrados visibles</option>
+        </select>
+      </div>
+      <fieldset>
+        <legend>¿Cuántos protagonistas?</legend>
+        <div class="radios">
+          <label><input type="radio" name="cantidad" value="1" checked> Uno</label>
+          <label><input type="radio" name="cantidad" value="2"> Dos (casamiento)</label>
+        </div>
+      </fieldset>
+      <div class="fotos">
+        <div class="foto-box">
+          <div class="field"><label for="foto">Foto del personaje 1</label>
+            <input type="file" id="foto" accept="image/jpeg,image/png,image/webp" required></div>
+          <p class="file-hint">JPG, PNG o WebP · hasta 8 MB.</p>
+        </div>
+        <div class="foto-box hidden" id="caja-foto2">
+          <div class="field"><label for="foto2">Foto del personaje 2</label>
+            <input type="file" id="foto2" accept="image/jpeg,image/png,image/webp"></div>
+          <p class="file-hint">Se generarán dos imágenes independientes.</p>
+        </div>
+      </div>
+      <p class="muted">Cada vez que tocás «Generar» se hace una solicitud paga a OpenAI por cada personaje. Esperá el resultado antes de volver a intentarlo.</p>
+      <button class="primary" id="generar" type="submit">Generar personaje</button>
+      <div id="aviso" class="notice" role="status" aria-live="polite"></div>
+    </form>
+  </section>
+  <section class="card hidden" id="seccion-resultados" aria-label="Resultados">
+    <h2>Resultado de la IA</h2>
+    <p class="muted" id="detalle-resultados"></p>
+    <div class="results" id="resultados"></div>
+  </section>
+</main>
+<script>
+  const formulario = document.getElementById('formulario');
+  const foto = document.getElementById('foto');
+  const foto2 = document.getElementById('foto2');
+  const caja2 = document.getElementById('caja-foto2');
+  const boton = document.getElementById('generar');
+  const aviso = document.getElementById('aviso');
+  const seccion = document.getElementById('seccion-resultados');
+  const resultados = document.getElementById('resultados');
+  const detalle = document.getElementById('detalle-resultados');
+  let cantidad = '1';
 
-  <input type="file" id="foto" accept="image/*">
-  <button id="generar">Generar cara con IA</button>
-  <p id="estado"></p>
+  document.querySelectorAll('input[name="cantidad"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      cantidad = document.querySelector('input[name="cantidad"]:checked').value;
+      caja2.classList.toggle('hidden', cantidad !== '2');
+      foto2.required = cantidad === '2';
+    });
+  });
 
-  <div id="comparacion">
-    <div>
-      <p>Foto original</p>
-      <img id="original" style="display:none;">
-    </div>
-    <div>
-      <p>Resultado de la IA</p>
-      <img id="resultado" style="display:none;">
-    </div>
-  </div>
+  function mensaje(texto, esError = false) {
+    aviso.textContent = texto;
+    aviso.className = `notice show${esError ? ' error' : ''}`;
+  }
 
-  <script>
-    const inputFoto = document.getElementById('foto');
-    const imgOriginal = document.getElementById('original');
+  function validar(archivo) {
+    if (!archivo) return 'Tenés que seleccionar la foto.';
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(archivo.type)) return 'Solo se aceptan JPG, PNG y WebP.';
+    if (archivo.size > 8 * 1024 * 1024) return 'Cada foto puede pesar como máximo 8 MB.';
+    return null;
+  }
 
-    inputFoto.onchange = () => {
-      if (inputFoto.files[0]) {
-        imgOriginal.src = URL.createObjectURL(inputFoto.files[0]);
-        imgOriginal.style.display = 'block';
+  formulario.addEventListener('submit', async event => {
+    event.preventDefault();
+    const error = validar(foto.files[0]) || (cantidad === '2' ? validar(foto2.files[0]) : null);
+    if (error) return mensaje(error, true);
+
+    const estilo = document.getElementById('estilo').value;
+    const datos = new FormData();
+    datos.append('foto', foto.files[0]);
+    if (cantidad === '2') datos.append('foto2', foto2.files[0]);
+    datos.append('estilo', estilo);
+
+    boton.disabled = true;
+    boton.textContent = 'Generando… esperá unos momentos';
+    seccion.classList.add('hidden');
+    resultados.replaceChildren();
+    mensaje('Estamos dibujando tu personaje. Puede tardar un poco.');
+
+    try {
+      const respuesta = await fetch('/api/generar-cara', {method:'POST',body:datos});
+      const json = await respuesta.json();
+      if (!respuesta.ok) throw new Error(json.error || 'No se pudo generar la imagen.');
+      const imagenes = Array.isArray(json.imagenes) ? json.imagenes : [json.imagen, json.imagen2].filter(Boolean);
+      if (!imagenes.length || imagenes.some(url => typeof url !== 'string' || !url.startsWith('data:image/png;base64,'))) {
+        throw new Error('El servidor no devolvió imágenes válidas.');
       }
-    };
 
-    document.getElementById('generar').onclick = async () => {
-      const estado = document.getElementById('estado');
-      const resultado = document.getElementById('resultado');
-      const boton = document.getElementById('generar');
-
-      if (!inputFoto.files[0]) {
-        estado.textContent = 'Elegí una foto primero.';
-        return;
-      }
-
-      boton.disabled = true;
-      estado.textContent = 'Generando... puede tardar entre 10 y 30 segundos.';
-      resultado.style.display = 'none';
-
-      try {
-        const datos = new FormData();
-        datos.append('foto', inputFoto.files[0]);
-
-        const respuesta = await fetch('/api/generar-cara', { method: 'POST', body: datos });
-        const json = await respuesta.json();
-
-        if (!respuesta.ok) {
-          estado.textContent = 'Error: ' + (json.error || 'desconocido') + (json.detalle ? ' — revisá la consola del navegador para más detalle.' : '');
-          console.error(json);
-        } else {
-          resultado.src = json.imagen;
-          resultado.style.display = 'block';
-          estado.textContent = '¡Listo!';
-        }
-      } catch (error) {
-        estado.textContent = 'Error de conexión: ' + error.message;
-      }
-
+      imagenes.forEach((dataUrl, i) => {
+        const tarjeta = document.createElement('article');
+        tarjeta.className = 'result';
+        const titulo = document.createElement('h3');
+        titulo.textContent = `Personaje ${i + 1}`;
+        const cuadricula = document.createElement('div');
+        cuadricula.className = 'checker';
+        const img = document.createElement('img');
+        img.alt = `Personaje ${i + 1} estilo ${estilo}`;
+        img.src = dataUrl;
+        const descargar = document.createElement('a');
+        descargar.className = 'download';
+        descargar.textContent = `Descargar personaje ${i + 1}`;
+        descargar.href = dataUrl;
+        descargar.download = `personaje-${estilo}-${i + 1}.png`;
+        cuadricula.append(img);
+        tarjeta.append(titulo, cuadricula, descargar);
+        resultados.append(tarjeta);
+      });
+      detalle.textContent = `${imagenes.length} personaje(s) · estilo ${estilo}`;
+      seccion.classList.remove('hidden');
+      mensaje('¡Listo! Compará los resultados y descargalos si querés.');
+      seccion.scrollIntoView({behavior:'smooth',block:'start'});
+    } catch (error) {
+      mensaje(error.message || 'No se pudo generar. Probá otra vez.', true);
+    } finally {
       boton.disabled = false;
-    };
-  </script>
+      boton.textContent = 'Generar personaje';
+    }
+  });
+</script>
 </body>
 </html>
