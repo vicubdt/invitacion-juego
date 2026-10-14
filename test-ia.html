@@ -82,7 +82,15 @@
       font-weight:800;
       margin:0 0 10px;
     }
-    input[type=file]{
+    .sub-label{
+      display:block;
+      font-size:13px;
+      font-weight:700;
+      margin:10px 0 8px;
+      color:var(--ink);
+    }
+    input[type=file],
+    select{
       width:100%;
       border:1px solid var(--line);
       border-radius:12px;
@@ -315,6 +323,7 @@
     <h1>Laboratorio de personajes</h1>
     <p class="lead">
       Compará las tres opciones automáticas con una o dos fotos.
+      Si elegís dos protagonistas, se interpreta como casamiento y podés definir la vestimenta de cada uno.
       Esta pantalla es de prueba; no es la página que verá el comprador.
     </p>
 
@@ -335,6 +344,14 @@
               <input type="file" id="foto" accept="image/jpeg,image/png,image/webp" required>
               <p class="hint">JPG, PNG o WebP · hasta 8 MB.</p>
             </div>
+
+            <div id="vestimenta-box-1" class="hidden">
+              <label class="sub-label" for="vestimenta1">Vestimenta del personaje 1</label>
+              <select id="vestimenta1">
+                <option value="vestido" selected>Vestido de novia</option>
+                <option value="traje">Traje</option>
+              </select>
+            </div>
           </div>
 
           <div class="box hidden" id="caja-foto2">
@@ -342,6 +359,14 @@
               <label for="foto2">Foto del personaje 2</label>
               <input type="file" id="foto2" accept="image/jpeg,image/png,image/webp">
               <p class="hint">Para casamiento se generarán tres pares de personajes, uno por cada estilo.</p>
+            </div>
+
+            <div id="vestimenta-box-2">
+              <label class="sub-label" for="vestimenta2">Vestimenta del personaje 2</label>
+              <select id="vestimenta2">
+                <option value="vestido">Vestido de novia</option>
+                <option value="traje" selected>Traje</option>
+              </select>
             </div>
           </div>
         </div>
@@ -373,6 +398,10 @@
     const foto1Input = document.getElementById('foto');
     const foto2Input = document.getElementById('foto2');
     const cajaFoto2 = document.getElementById('caja-foto2');
+    const vestimentaBox1 = document.getElementById('vestimenta-box-1');
+    const vestimentaBox2 = document.getElementById('vestimenta-box-2');
+    const vestimenta1Input = document.getElementById('vestimenta1');
+    const vestimenta2Input = document.getElementById('vestimenta2');
     const boton = document.getElementById('generar');
     const aviso = document.getElementById('aviso');
     const seccionResultados = document.getElementById('seccion-resultados');
@@ -385,13 +414,22 @@
     let cantidad = '1';
     let ultimaRespuesta = null;
 
+    function actualizarModoCantidad() {
+      cantidad = document.querySelector('input[name="cantidad"]:checked').value;
+      const esCasamiento = cantidad === '2';
+
+      cajaFoto2.classList.toggle('hidden', !esCasamiento);
+      vestimentaBox1.classList.toggle('hidden', !esCasamiento);
+      vestimentaBox2.classList.toggle('hidden', !esCasamiento);
+
+      foto2Input.required = esCasamiento;
+    }
+
     document.querySelectorAll('input[name="cantidad"]').forEach((radio) => {
-      radio.addEventListener('change', () => {
-        cantidad = document.querySelector('input[name="cantidad"]:checked').value;
-        cajaFoto2.classList.toggle('hidden', cantidad !== '2');
-        foto2Input.required = cantidad === '2';
-      });
+      radio.addEventListener('change', actualizarModoCantidad);
     });
+
+    actualizarModoCantidad();
 
     function mostrarAviso(texto, esError = false) {
       aviso.textContent = texto;
@@ -417,8 +455,8 @@
     }
 
     function descripcionEstilo(estilo) {
-      if (estilo === 'doodle') return 'Dibujo simple, caricaturizado y simpático.';
-      if (estilo === 'retro') return 'Personaje de videojuego de plataformas clásico.';
+      if (estilo === 'doodle') return 'Dibujo simple, adorable, suave y caricaturizado.';
+      if (estilo === 'retro') return 'Personaje de videojuego clásico, simplificado y con más presencia visual.';
       if (estilo === 'pixel') return 'Sprite pixelado con píxeles cuadrados visibles.';
       return '';
     }
@@ -437,7 +475,7 @@
       resumenTitulo.textContent = `Estilo elegido: ${etiqueta}`;
       resumenTexto.textContent =
         cantidadProtagonistas === 2
-          ? `En esta prueba interna quedó seleccionado el estilo ${etiqueta} para los dos protagonistas. Todavía no está conectado al juego final, pero esta es la lógica que luego vamos a guardar.`
+          ? `En esta prueba interna quedó seleccionado el estilo ${etiqueta} para los dos protagonistas del casamiento. Todavía no está conectado al juego final, pero esta es la lógica que luego vamos a guardar.`
           : `En esta prueba interna quedó seleccionado el estilo ${etiqueta} para el protagonista. Todavía no está conectado al juego final, pero esta es la lógica que luego vamos a guardar.`;
       resumen.classList.add('show');
     }
@@ -561,27 +599,34 @@
 
       const archivo1 = foto1Input.files[0];
       const archivo2 = foto2Input.files[0];
+      const esCasamiento = cantidad === '2';
 
       const error1 = validarArchivo(archivo1, 'la foto del personaje 1');
       if (error1) return mostrarAviso(error1, true);
 
-      if (cantidad === '2') {
+      if (esCasamiento) {
         const error2 = validarArchivo(archivo2, 'la foto del personaje 2');
         if (error2) return mostrarAviso(error2, true);
       }
 
       const datos = new FormData();
       datos.append('foto', archivo1);
-      if (cantidad === '2') datos.append('foto2', archivo2);
+
+      if (esCasamiento) {
+        datos.append('foto2', archivo2);
+        datos.append('vestimenta1', vestimenta1Input.value);
+        datos.append('vestimenta2', vestimenta2Input.value);
+      }
 
       boton.disabled = true;
       boton.textContent = 'Generando las 3 opciones…';
       seccionResultados.classList.add('hidden');
       resultados.replaceChildren();
       resumen.classList.remove('show');
+
       mostrarAviso(
-        cantidad === '2'
-          ? 'Estamos generando 3 estilos para los dos protagonistas. Esto puede tardar un poco.'
+        esCasamiento
+          ? 'Estamos generando 3 estilos para los dos protagonistas del casamiento. Esto puede tardar un poco.'
           : 'Estamos generando las 3 opciones de personaje. Esto puede tardar un poco.'
       );
 
